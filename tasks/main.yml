@@ -1,7 +1,5 @@
 ---
 - name: Deploy and configure metadata update service
-  hosts: target_machine
-  become: yes  # Ensure that tasks are run as root
   tasks:
     - name: Ensure /etc/simplevm/scripts/users directory exists
       file:
