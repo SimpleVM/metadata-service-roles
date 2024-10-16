@@ -51,18 +51,18 @@
         group: root
         mode: '0644'
 
-    - name: Copy metadata-server.service to /etc/systemd/system
+    - name: Copy metadata-service.service to /etc/systemd/system
       copy:
-        src: ./metadata-server.service
-        dest: /etc/systemd/system/metadata-server.service
+        src: ./metadata-service.service
+        dest: /etc/systemd/system/metadata-service.service
         owner: root
         group: root
         mode: '0644'
 
-    - name: Copy metadata-server.timer to /etc/systemd/system
+    - name: Copy metadata-service.timer to /etc/systemd/system
       copy:
-        src: ./metadata-server.timer
-        dest: /etc/systemd/system/metadata-server.timer
+        src: ./metadata-service.timer
+        dest: /etc/systemd/system/metadata-service.timer
         owner: root
         group: root
         mode: '0644'
@@ -70,15 +70,15 @@
     - name: Reload systemd daemon to recognize new service and timer files
       command: systemctl daemon-reload
 
-    - name: Enable and start metadata-server.service
+    - name: Enable and start metadata-service.service
       systemd:
-        name: metadata-server.service
+        name: metadata-service.service
         enabled: yes
         state: started
 
-    - name: Enable and start metadata-server.timer
+    - name: Enable and start metadata-service.timer
       systemd:
-        name: metadata-server.timer
+        name: metadata-service.timer
         enabled: yes
         state: started
     
