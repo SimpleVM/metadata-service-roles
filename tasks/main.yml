@@ -13,7 +13,7 @@
 
     - name: Copy add_keys.sh to /etc/simplevm/script/users
       copy:
-        src: ./add_keys.sh
+        src: add_keys.sh
         dest: /etc/simplevm/scripts/users/add_keys.sh
         owner: root
         group: root
@@ -29,8 +29,23 @@
 
     - name: Copy check_version.sh to /etc/simplevm/scripts/utils
       copy:
-        src: ./check_version.sh
+        src: check_version.sh
         dest: /etc/simplevm/scripts/utils/check_version.sh
+        owner: root
+        group: root
+        mode: '0755'
+    - name: Ensure /etc/simplevm/config directory exists
+      file:
+        path: /etc/simplevm/config
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy compatibility_file to /etc/simplevm/config
+      copy:
+        src: compatibility.json
+        dest: /etc/simplevm/config/compatibility.json
         owner: root
         group: root
         mode: '0755'
@@ -38,7 +53,7 @@
     - name: Ensure /var/log directory exists
       file:
         path: /var/log
-        state: directory           
+        state: directory
         owner: root
         group: root
         mode: '0755'
