@@ -13,7 +13,7 @@
   }
 
   # Load the auth token and user from .metadata_config.env
-  source config/metadata_config.env
+  source /etc/simplevm/metadata_config.env
 
   # Set default user to 'ubuntu' if not provided  
   USER_TO_SET="${USER_TO_SET:-ubuntu}"
@@ -21,7 +21,7 @@
 
   # Step 1: Run the get_metadata script and capture its output
   log_message "Getting metadata from server"
-  response=$(./get_metadata.sh)
+  response=$(etc/simplevm/get_metadata.sh)
 
   # Log the JSON response for debugging purposes
   log_message "Response from get_metadata.sh: $response"
