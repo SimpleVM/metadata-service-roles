@@ -31,18 +31,18 @@
     group: root
     mode: '0755'
 
+- name: Copy update_compatibilities.sh to /etc/simplevm/scripts/utils
+  copy:
+    src: update_compatibilities.sh
+    dest: /etc/simplevm/scripts/utils/update_compatibilities.sh
+    owner: root
+    group: root
+    mode: '0755'
+  
 - name: Ensure /etc/simplevm/config directory exists
   file:
     path: /etc/simplevm/config
     state: directory
-    owner: root
-    group: root
-    mode: '0755'
-
-- name: Copy compatibility_file to /etc/simplevm/config
-  copy:
-    src: compatibility.json
-    dest: /etc/simplevm/config/compatibility.json
     owner: root
     group: root
     mode: '0755'
