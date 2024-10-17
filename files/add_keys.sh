@@ -52,7 +52,7 @@ for key in "${SCRIPT_DATA[@]}"; do
     # Log the extracted VERSION
     log_message "$key version: $metadata_version"
 
-    # Check if the metadata version is compatible
+    # Check if the metadata version is compatible 
     if ! ./scripts/utils/check_version.sh "$key" "$SCRIPT_VERSION" "$metadata_version"; then
         log_message "$key version $metadata_version is not compatible. Exiting."
         exit 1
@@ -108,3 +108,4 @@ done
   # executed by the service?
   # the usernames we have as keys might be a problem --> cannot add users with such identifiers
   # check this: https://github.com/deNBI/ansible-portal-dev-keys
+  # have to set url for current compatibility file in get_metadata.sh   
