@@ -1,0 +1,2 @@
+check how the compatibility_script updates the env file!
+Seems it overwrites the stuff
