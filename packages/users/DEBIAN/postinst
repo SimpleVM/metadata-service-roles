@@ -2,6 +2,27 @@
 
 set -e
 
+
+# Define the SSH configuration file
+SSHD_CONFIG_FILE="/etc/ssh/sshd_config"
+
+# Define the desired configuration line
+AUTHORIZED_KEYS_LINE="AuthorizedKeysFile .ssh/authorized_keys /home/%u/.ssh/authorized_keys /home/%u/.ssh/metadata_authorized_keys"
+
+# Check if the line is already in the configuration file
+if grep -qE '^#?AuthorizedKeysFile' "$SSHD_CONFIG_FILE"; then
+  # If it exists, replace the line
+  sed -i "s|^#?AuthorizedKeysFile.*|$AUTHORIZED_KEYS_LINE|" "$SSHD_CONFIG_FILE"
+else
+  # If it doesn't exist, append the line
+  echo "$AUTHORIZED_KEYS_LINE" >> "$SSHD_CONFIG_FILE"
+fi
+
+# Restart sshd to apply changes
+systemctl restart ssh
+
+echo "Configured AuthorizedKeysFile in $SSHD_CONFIG_FILE and restarted sshd."
+
 # Reload systemd to recognize new service unit files
 systemctl daemon-reload
 
@@ -12,5 +33,6 @@ systemctl enable public-keys-sync.timer
 # Start the service and timer
 systemctl start public-keys-sync.service
 systemctl start public-keys-sync.timer
+
 
 exit 0
