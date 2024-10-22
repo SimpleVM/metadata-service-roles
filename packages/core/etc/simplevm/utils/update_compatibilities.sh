@@ -17,10 +17,16 @@ if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
 fi
 
 # Construct the URL
-base_url="https://raw.githubusercontent.com/$REPO_OWNER/$REPO_NAME/refs/tags"
+base_url="https://raw.githubusercontent.com/$REPO_OWNER/$REPO_NAME"
 compatibility_json_url="$base_url/$latest_tag/files/compatibility.json"
 
-# Update the metadata_config.env file
-echo "COMPATIBILITY_JSON_ENDPOINT=$compatibility_json_url" > $CONFIG_FILE
+# Update or add the COMPATIBILITY_JSON_ENDPOINT in the metadata_config.env file
+if grep -q "^COMPATIBILITY_JSON_ENDPOINT=" "$CONFIG_FILE"; then
+  # If the entry exists, update it
+  sed -i "s|^COMPATIBILITY_JSON_ENDPOINT=.*|COMPATIBILITY_JSON_ENDPOINT=$compatibility_json_url|" "$CONFIG_FILE"
+else
+  # If the entry does not exist, append it
+  echo "COMPATIBILITY_JSON_ENDPOINT=$compatibility_json_url" >> "$CONFIG_FILE"
+fi
 
 echo "Configuration updated successfully with URL: $compatibility_json_url"
