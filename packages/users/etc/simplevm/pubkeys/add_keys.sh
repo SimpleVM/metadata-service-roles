@@ -53,7 +53,7 @@ for key in "${SCRIPT_DATA[@]}"; do
     log_message "$key version: $metadata_version"
 
     # Check if the metadata version is compatible 
-    if ! ./scripts/utils/check_version.sh "$key" "$SCRIPT_VERSION" "$metadata_version"; then
+    if ! /etc/simplevm/utils/check_version.sh "$key" "$SCRIPT_VERSION" "$metadata_version"; then
         log_message "$key version $metadata_version is not compatible. Exiting."
         exit 1
     fi
