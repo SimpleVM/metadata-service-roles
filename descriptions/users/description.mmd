@@ -1,0 +1,64 @@
+flowchart LR
+
+subgraph Virtual Machine
+
+    authkeys_gen@{ shape: flag, label: "Authorized keys" }
+    authkeyf_spec@{ shape: tag-doc, label: "Metadata Authorized Keys" }
+    authkeyf_spec -- extends --> authkeys_gen
+    subgraph authkeys [Authorized Keys]
+        authkeys_gen
+        authkeyf_spec
+    end
+
+    subgraph core_service[Core service]
+        retrieval_check{"Retrieval and compatibility check"}        
+    end
+
+    subgraph userdata_service[Userdata service]
+    direction TB
+        retrieved_keys@{ shape: docs, label: "retrieved public keys" }
+        D{Loop Over retrieved keys}
+        D o--> retrieved_keys
+        
+        D -->|For Each Key| E[Check if Key is in]
+        E o--> authkeyf_spec
+        E -->|Yes| F[Do Nothing]
+        E -->|No| G[Add Key to]
+        G o--> authkeyf_spec
+        G --> H[Continue Loop]
+        F --> H
+
+        H -->|End of retrieved_keys| I{Loop Over saved keys}
+        I o--> authkeyf_spec
+
+        
+        I -->|For Each Key| J[Check if Key is in]
+        J o--> retrieved_keys
+        J -->|Yes| K[Do Nothing]
+        J -->|No| L[Remove Key]
+        L o--> authkeyf_spec
+        L --> M[Continue Loop]
+        K --> M
+
+        M -->|End of saved keys| N[End]
+        
+    end
+    userdata_service -- uses --> retrieval_check
+    retrieval_check -- delivers --> retrieved_keys
+
+end
+
+subgraph Metadata
+    data o-- are part of --o keys
+    keys@{ shape: docs, label: "Public Keys" }
+    data@{ shape: docs, label: "data delivered" }
+    
+    
+end
+
+retrieval_check o-- gets from server endpoint --o data
+
+
+  
+
+   
