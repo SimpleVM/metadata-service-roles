@@ -17,30 +17,21 @@ subgraph Virtual Machine
     subgraph userdata_service[Userdata service]
     direction TB
         retrieved_keys@{ shape: docs, label: "retrieved public keys" }
-        D{Loop Over retrieved keys}
+        A{check if delivered data is valid}
+        A o--> retrieved_keys
+        A --> B@{ shape: hex, label: "Check Result" }
+        B --> X@{ shape: lean-r, label: "Invalid" }
+        X --> XY@{ shape: dbl-circ, label: "Do not replace" }
+        B --> Y@{ shape: lean-r, label: "Valid" }
+        Y --> D
+ 
+        D{push retrieved_keys into file}
         D o--> retrieved_keys
         
-        D -->|For Each Key| E[Check if Key is in]
+        D --> E
         E o--> authkeyf_spec
-        E -->|Yes| F[Do Nothing]
-        E -->|No| G[Add Key to]
-        G o--> authkeyf_spec
-        G --> H[Continue Loop]
-        F --> H
-
-        H -->|End of retrieved_keys| I{Loop Over saved keys}
-        I o--> authkeyf_spec
-
-        
-        I -->|For Each Key| J[Check if Key is in]
-        J o--> retrieved_keys
-        J -->|Yes| K[Do Nothing]
-        J -->|No| L[Remove Key]
-        L o--> authkeyf_spec
-        L --> M[Continue Loop]
-        K --> M
-
-        M -->|End of saved keys| N[End]
+        E{replace corresponding Metadata-Keys file}
+        E --> N@{ shape: dbl-circ, label: "End" }
         
     end
     userdata_service -- uses --> retrieval_check
