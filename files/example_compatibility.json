@@ -1,0 +1,8 @@
+{
+    "userdata": {
+        "1.0.0": ["1.0.0"]
+    },
+    "feature": {
+        "feature_script_version_key": ["List", "of", "supported", "metadata", "versions", "from", "server"]
+    }
+}
