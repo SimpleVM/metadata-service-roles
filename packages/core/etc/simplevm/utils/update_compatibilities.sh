@@ -4,7 +4,7 @@
 CONFIG_FILE="/etc/simplevm/metadata_config.env"
 
 # Define GitHub API information
-REPO_OWNER="deNBI"
+REPO_OWNER="simplevm"
 REPO_NAME="metadata-service-roles"
 
 # Fetch the latest release tag using GitHub API
