@@ -33,3 +33,15 @@ grep -E '^AuthorizedKeysFile' "$SSHD_CONFIG_FILE" || echo "No AuthorizedKeysFile
 
 # Remove intermediate backup
 rm "${SSHD_CONFIG_FILE}.bak"
+
+systemctl daemon-reload
+
+# Enable the service and timer
+systemctl enable public-keys-sync.service
+systemctl enable public-keys-sync.timer
+
+# Start the service and timer
+systemctl start public-keys-sync.service
+systemctl start public-keys-sync.timer
+
+exit 0
