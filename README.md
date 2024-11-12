@@ -1,38 +1,16 @@
-# Metadata Services Ansible Role
+# Metadata Service Roles
 
-This Ansible role enables the installation and setup of the [SimpleVM Metadata-Server](https://github.com/deNBI/simplevm-metadata-server) related services on machines. To fully utilize the features enabled by this role, a corresponding server needs to be running.
-
-## Installation
-```yaml
-
-roles:
-  - name: enable_metadata_services
-    src: https://github.com/deNBI/metadata-service-roles.git
-    scm: git
-    version: 1.0.0
-```
-
-~~~bash
-ansible-galaxy install -r requirements.yml
-~~~
-
-## Usage
-```yaml
----
-roles:
-  - name: enable_metadata_services
-```
-
+This repository holds the recipes for creating debian packages that hold the features for the metadata services.
 
 ## Features and Function
 
 ### Userdata
 
-This role enables the virtual machines within the network of the metadata server to retrieve user data.
-
 #### SSH Keys
 
-The public keys retrieved from the server are set in the corresponding authorization files which then allow ssh-connections to the machine via the corresponding private keys. The daemon implemented with this role synchronizes the keys in the authorization files with the keys given from the server. The settings in the sshd-config get adjusted accordingly.
+This package enables the virtual machines within the network of the metadata server to retrieve user data.
+It synchronizes the public-keys retrieved from the metadata server with the authorized-keys set in a dedicated authorization file to enable ssh access for users who got added after the start of the machine. The settings in the sshd-config get adjusted accordingly.
+
 
 ## General information
 
