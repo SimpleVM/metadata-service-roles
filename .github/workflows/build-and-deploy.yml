@@ -1,0 +1,31 @@
+name: Build and Deploy Debian Packages
+
+on:
+  push:
+    branches:
+      - main # Adjust to your branch of interest
+  pull_request:
+    branches:
+      - main # Adjust to your branch of interest
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Run Ansible Playbook
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: ansible-playbook -i inventory deploy.yml --extra-vars "branch_name=$GITHUB_REF_NAME"
