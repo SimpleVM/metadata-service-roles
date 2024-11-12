@@ -1,9 +1,10 @@
 Package: simplevm-metadata-service-public-key-synchronization
-Version: 0.1.0
+Source: simplevm-metadata-service
+Version: 0.1.2
 Section: base
 Priority: optional
 Architecture: all
-Depends: bash, jq, simplevm-metadata-service-core
+Depends: jq
 Maintainer: SimpleVM Development Team<cloud@denbi.de>
 Uploaders: Nils Hoffmann <n.hoffmann@fz-juelich.de>, Qiqi Mok <q.mok@fz-juelich.de>, Peter Belmann <p.belmann@fz-juelich.de>, David Weinholz<d.weinholz@fz-juelich.de>, Viktor Rudko<v.rudko@fz-juelich.de>
 Description: Public key synchronization service that enables adding and removing public-keys for SSH-access by metadata retrieved from the Metadata-Server in the SimpleVM environment.

@@ -4,7 +4,7 @@ Description=Runs the public key script in /etc/simplevm/ every 2 minutes
 [Timer]
 OnBootSec=5min
 OnUnitActiveSec=2min
-Unit=metadata-server.service
+Unit=public-keys-sync.service
 
 [Install]
 WantedBy=timers.target
