@@ -7,6 +7,15 @@ CONFIG_FILE="/etc/simplevm/metadata_config.env"
 REPO_OWNER="simplevm"
 REPO_NAME="metadata-service-roles"
 
+LOG_FILE="/var/log/metadata.log"
+
+
+log_message() {
+  echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+}
+
+
+
 # Function to retrieve the tag from the redirect URL
 get_latest_tag_from_redirect() {
   local redirect_url="https://github.com/$REPO_OWNER/$REPO_NAME/releases/latest"
@@ -28,7 +37,7 @@ if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
   latest_tag=$(get_latest_tag_from_redirect)
   # Check if the fallback also failed
   if [ -z "$latest_tag" ]; then
-    echo "Failed to retrieve the latest release tag from redirect. Exiting."
+    log_message "Failed to retrieve the latest release tag from redirect. Exiting."
     exit 1
   fi
 fi
@@ -46,4 +55,4 @@ else
   echo "COMPATIBILITY_JSON_ENDPOINT=$compatibility_json_url" >> "$CONFIG_FILE"
 fi
 
-echo "Configuration updated successfully with URL: $compatibility_json_url"
+log_message "Configuration updated successfully with URL: $compatibility_json_url"

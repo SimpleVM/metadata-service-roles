@@ -95,13 +95,3 @@ log_message "Updated metadata_authorized_keys with the latest public keys from m
 
 # Confirmation of new keys added (or removed)
 log_message "Script execution completed"
-
-
-  # make sure that the authorized keys file for the corresponding user is set
-  # set it in sshd config by: 
-  # AuthorizedKeysFile      .ssh/authorized_keys /home/%u/.ssh/authorized_keys /home/%u/.ssh/metadata_authorized_keys
-  # currently this file works when executed by hand - why is it not finding keys when
-  # executed by the service?
-  # the usernames we have as keys might be a problem --> cannot add users with such identifiers
-  # check this: https://github.com/deNBI/ansible-portal-dev-keys
-  # have to set url for current compatibility file in get_metadata.sh   

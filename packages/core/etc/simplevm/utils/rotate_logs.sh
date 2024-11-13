@@ -3,6 +3,7 @@
 # Define the log file path
 LOG_FILE="/var/log/metadata.log"
 
+
 # Check if the file exists
 if [[ -e "$LOG_FILE" ]]; then
     # Get the file size in bytes
@@ -15,10 +16,8 @@ if [[ -e "$LOG_FILE" ]]; then
         # Remove the top 100 lines from the file
         # and overwrite the file with the result
         tail -n +101 "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
-        echo "Rotated log file: Removed top 101 lines from $LOG_FILE"
     else
-        echo "Log file size is below 10 MB. No action taken."
     fi
 else
-    echo "Log file does not exist. No action taken."
+
 fi

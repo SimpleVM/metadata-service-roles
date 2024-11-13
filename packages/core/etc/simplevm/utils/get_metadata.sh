@@ -1,8 +1,13 @@
 #!/bin/bash
-
+LOG_FILE="/var/log/metadata.log"
 /etc/simplevm/utils/update_compatibilities.sh
 
 source /etc/simplevm/metadata_config.env
+
+log_message() {
+  echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+}
+
 
 # Construct the URL with hostname query param
 INFO_ENDPOINT_URL="${METADATA_INFO_ENDPOINT}?hostname=$(hostname)"
@@ -18,13 +23,13 @@ if [ -z "${REAL_METADATA_ENDPOINT}" ]; then
     info_response=$(curl -s -X GET "${INFO_ENDPOINT_URL}" -H "${AUTH_HEADER}")
 
     if [ $? -ne 0 ]; then
-        echo "Error: Failed to fetch metadata endpoint"
-        exit 1
+        log_message "Error: Failed to fetch metadata endpoint"
+        exit 1  
     fi
 
     # Validate the JSON response
     if ! jq -e '.metadata_endpoint' <<< "${info_response}" &> /dev/null; then
-        echo "Error: Invalid JSON response from metadata endpoint"
+        log_message "Error: Invalid JSON response from metadata endpoint"
         exit 1
     fi
 
@@ -40,7 +45,7 @@ LOCAL_IP=$(hostname -I | awk '{print $1}')
 metadata_response=$(curl -s -X GET "${REAL_METADATA_ENDPOINT}/metadata/${LOCAL_IP}" -H "${AUTH_HEADER}")
 
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to fetch metadata"
+    log_message "Error: Failed to fetch metadata"
     exit 1
 fi
 

@@ -1,6 +1,6 @@
 Package: simplevm-metadata-service-core
 Source: simplevm-metadata-service
-Version: 0.1.4
+Version: 0.1.5
 Section: base
 Priority: optional
 Architecture: all

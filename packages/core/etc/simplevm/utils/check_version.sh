@@ -1,10 +1,16 @@
 #!/bin/bash
+LOG_FILE="/var/log/metadata.log"
 
 # Ensure arguments are provided
 if [ "$#" -ne 3 ]; then
   echo "Usage: $0 FUNCTION_KEY SCRIPT_VERSION METADATA_VERSION"
   exit 1
 fi
+
+log_message() {
+  echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+}
+
 
 FUNCTION_KEY="$1"
 SCRIPT_VERSION="$2"
@@ -15,7 +21,7 @@ COMPATIBILITY_JSON_ENDPOINT=$(grep '^COMPATIBILITY_JSON_ENDPOINT=' "/etc/simplev
 
 # Check if the endpoint was not found or is empty
 if [ -z "$COMPATIBILITY_JSON_ENDPOINT" ]; then
-  echo "COMPATIBILITY_JSON_ENDPOINT is not set in /etc/simplevm/metadata_config.env"
+  log_message "COMPATIBILITY_JSON_ENDPOINT is not set in /etc/simplevm/metadata_config.env"
   exit 1
 fi
 
@@ -31,7 +37,7 @@ check_version() {
 
   # Ensure the JSON data is valid
   if ! echo "$json_data" | jq empty; then
-    echo "Invalid JSON data retrieved from $COMPATIBILITY_JSON_ENDPOINT"
+    log_message "Invalid JSON data retrieved from $COMPATIBILITY_JSON_ENDPOINT"
     exit 1
   fi
 
@@ -57,7 +63,7 @@ check_version() {
 
 # Check and perform the version check
 if check_version "$FUNCTION_KEY" "$SCRIPT_VERSION" "$METADATA_VERSION"; then
-  echo "Versions are compatible."
+  log_message "Versions are compatible."
 else
-  echo "Versions are not compatible."
+  log_message "Versions are not compatible."
 fi
