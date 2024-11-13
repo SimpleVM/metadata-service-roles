@@ -1,4 +1,7 @@
 #!/bin/bash
+
+/etc/simplevm/utils/update_compatibilities.sh
+
 source /etc/simplevm/metadata_config.env
 
 # Construct the URL with hostname query param
