@@ -1,45 +1,14 @@
 ---
-- hosts: localhost
-  vars:
-    repo_url: "https://github.com/simplevm/metadata-service-roles.git"
-    build_dir: "/tmp/build"
-    target_host: "target.example.com" # DNS for the target machine
-    dest_dir: "/path/to/apt/repo"
-  tasks:
-    - name: Ensure build directory exists
-      file:
-        path: "{{ build_dir }}"
-        state: directory
+- name: Build and transfer Debian packages
+  hosts: localhost
+  vars_files:
+    - ../vars/vars.yml
+  roles:
+    - build_packages
 
-    - name: Clone the repository
-      git:
-        repo: "{{ repo_url }}"
-        dest: "{{ build_dir }}"
-        version: "{{ branch_name }}"  # Use branch from GitHub Action
-      
-    - name: Build debian packages
-      shell: dpkg-deb --build "{{ build_dir }}/packages/{{ item }}"
-      with_items:
-        - core
-        - meta
-        - users
-      args:
-        chdir: "{{ build_dir }}"
-
-    #- name: Transfer packages to remote server
-    #  copy:
-    #    src: "{{ build_dir }}/{{ item }}/{{ item }}.deb"
-    #    dest: "{{ dest_dir }}"
-    #  with_items:
-    #    - core
-    #    - meta
-    #    - users
-
-    #- name: Add packages to apt repository
-    #  shell: >
-    #    reprepro -b /path/to/repo includedeb buster {{ dest_dir }}/{{ item }}.deb
-    #  with_items:
-    #    - core
-    #    - meta
-    #    - users
-    #  delegate_to: "{{ target_host }}"
+- name: Add packages to repository
+  hosts: remoteserver
+  vars_files:
+    - ../vars/vars.yml
+  roles:
+    - deploy_packagesc

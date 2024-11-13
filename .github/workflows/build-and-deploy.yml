@@ -1,31 +1,28 @@
-name: Build and Deploy Debian Packages
+name: Build and Deploy Packages
 
 on:
-  push:
-    branches:
-      - main # Adjust to your branch of interest
-  pull_request:
-    branches:
-      - main # Adjust to your branch of interest
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to checkout and deploy'
+        required: true
+        default: 'main'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-and-deploy:
+    runs-on: self-hosted
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
-      
-      - name: Install Ansible
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible
+          ref: ${{ github.event.inputs.branch }}  # Use the branch input from workflow_dispatch
 
       - name: Run Ansible Playbook
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: ansible-playbook -i inventory deploy.yml --extra-vars "branch_name=$GITHUB_REF_NAME"
+          BRANCH_NAME: ${{ github.event.inputs.branch }}  # Pass the selected branch to Ansible
+        run: |
+          eval `ssh-agent -s`
+          ssh-add ~/.ssh/id_rsa
+          cd plays/playbooks
+          ansible-playbook -i ../inventory deploy.yml

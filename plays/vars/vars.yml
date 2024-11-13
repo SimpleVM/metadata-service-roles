@@ -1,0 +1,28 @@
+# vars.yml
+
+# Local build directory where the packages will be built on the GitHub runner
+local_build_dir: "/tmp/build_packages"
+
+# Remote directory on the remote machine to store the transferred packages
+remote_package_dir: "/home/ubuntu/simplevm_packages"
+
+# Base directory for the repository on the remote machine
+repo_base_dir: "/var/www/repos/apt/jammy"
+
+# Distribution name for reprepro (adjust the distribution name as needed)
+distribution_name: "jammy"
+
+inventory_hostname: apt.bi.denbi.de
+
+# Repository URL (if needed for checking out source code or other operations)
+repo_url: "https://github.com/simplevm/metadata-service-roles"
+
+# Branch name that might be dynamically set by GitHub Actions
+# branch_name should be set by GitHub Actions environment or passed explicitly to the playbook
+branch_name: "{{ lookup('env', 'BRANCH_NAME') | default('main') }}"
+
+# List of packages to be built and deployed
+package_list:
+  - core
+  - meta
+  - users

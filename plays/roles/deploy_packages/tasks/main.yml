@@ -1,0 +1,8 @@
+---
+- name: Add packages to apt repository
+  shell: >
+    reprepro -b {{ repo_base_dir }} includedeb {{ repo_base_dir }} {{ remote_package_dir }}/{{ item }}.deb
+  with_items:
+    - core
+    - meta
+    - users
