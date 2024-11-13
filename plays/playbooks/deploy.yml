@@ -1,7 +1,7 @@
 ---
 - hosts: localhost
   vars:
-    repo_url: "https://github.com/your/repo.git"
+    repo_url: "https://github.com/simplevm/metadata-service-roles.git"
     build_dir: "/tmp/build"
     target_host: "target.example.com" # DNS for the target machine
     dest_dir: "/path/to/apt/repo"
@@ -26,20 +26,20 @@
       args:
         chdir: "{{ build_dir }}"
 
-    - name: Transfer packages to remote server
-      copy:
-        src: "{{ build_dir }}/{{ item }}/{{ item }}.deb"
-        dest: "{{ dest_dir }}"
-      with_items:
-        - core
-        - meta
-        - users
+    #- name: Transfer packages to remote server
+    #  copy:
+    #    src: "{{ build_dir }}/{{ item }}/{{ item }}.deb"
+    #    dest: "{{ dest_dir }}"
+    #  with_items:
+    #    - core
+    #    - meta
+    #    - users
 
-    - name: Add packages to apt repository
-      shell: >
-        reprepro -b /path/to/repo includedeb buster {{ dest_dir }}/{{ item }}.deb
-      with_items:
-        - core
-        - meta
-        - users
-      delegate_to: "{{ target_host }}"
+    #- name: Add packages to apt repository
+    #  shell: >
+    #    reprepro -b /path/to/repo includedeb buster {{ dest_dir }}/{{ item }}.deb
+    #  with_items:
+    #    - core
+    #    - meta
+    #    - users
+    #  delegate_to: "{{ target_host }}"
