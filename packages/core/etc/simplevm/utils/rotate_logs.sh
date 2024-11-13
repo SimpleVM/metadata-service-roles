@@ -16,8 +16,6 @@ if [[ -e "$LOG_FILE" ]]; then
         # Remove the top 100 lines from the file
         # and overwrite the file with the result
         tail -n +101 "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
-    else
     fi
-else
 
 fi
