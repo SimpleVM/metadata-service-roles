@@ -32,7 +32,7 @@ latest_tag=$(curl -s "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releas
 
 # Check if latest_tag was successfully retrieved
 if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
-  echo "Failed to retrieve the latest release tag from GitHub API. Using redirect method."
+  log_message "Failed to retrieve the latest release tag from GitHub API. Using redirect method."
   # Fallback to retrieving the tag using the redirect method
   latest_tag=$(get_latest_tag_from_redirect)
   # Check if the fallback also failed
