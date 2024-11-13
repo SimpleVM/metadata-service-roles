@@ -2,6 +2,7 @@
 
 # Path to the log file
 LOG_FILE="/var/log/metadata.log"
+/etc/simplevm/utils/rotate_logs.sh
 
 # script version and affected keys from the metadata-response
 SCRIPT_VERSION="1.0.0"
