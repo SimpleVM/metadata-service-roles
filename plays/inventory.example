@@ -1,0 +1,2 @@
+[target]
+target.example.com ansible_user=youruser 

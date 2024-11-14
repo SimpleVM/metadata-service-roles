@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/bin/bash /etc/simplevm/scripts/users/add_keys.sh
+ExecStart=/bin/bash /etc/simplevm/pubkeys/add_keys.sh
 WorkingDirectory=/etc/simplevm
 EnvironmentFile=/etc/simplevm/metadata_config.env
 User=root
