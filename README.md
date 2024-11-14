@@ -77,3 +77,8 @@ sudo apt update
 sudo apt install simplevm-metadata-service
 ```
 Now the packages are available on the machine.
+
+
+### Useful links
+
+[Blog Entry on apt-Repositores with reprepro](https://www.thomas-krenn.com/de/wiki/Eigenes_apt-Repository_mit_reprepro_unter_Ubuntu_erstellen)
