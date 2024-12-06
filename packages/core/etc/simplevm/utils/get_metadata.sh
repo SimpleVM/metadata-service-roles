@@ -3,7 +3,9 @@
 LOG_FILE="/var/log/metadata.log"
 METADATA_OUTPUT_FILE="/etc/simplevm/metadata.json"
 
+/etc/simplevm/utils/rotate_logs.sh
 /etc/simplevm/utils/update_compatibilities.sh
+
 source /etc/simplevm/metadata_config.env
 
 log_message() {
@@ -52,7 +54,7 @@ fi
 
 # Write the metadata to a temporary file
 TMP_FILE="${METADATA_OUTPUT_FILE}.tmp"
-echo "${metadata_response}" > "${TMP_FILE}"
+echo "${metadata_response}"| jq > "${TMP_FILE}"
 
 # Rename the temporary file to the original filename
 if mv -f "${TMP_FILE}" "${METADATA_OUTPUT_FILE}"; then
