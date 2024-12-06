@@ -2,9 +2,10 @@
 
 # Path to the log file
 LOG_FILE="/var/log/metadata.log"
+
 /etc/simplevm/utils/rotate_logs.sh
 
-# script version and affected keys from the metadata-response
+# Script version and affected keys from the metadata-response
 SCRIPT_VERSION="1.0.0"
 SCRIPT_DATA=("userdata")
 
@@ -13,19 +14,22 @@ log_message() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
 }
 
-# Load the auth token and user from .metadata_config.env
-source /etc/simplevm/metadata_config.env
-
 # Set default user to 'ubuntu' if not provided
 USER_TO_SET="${USER_TO_SET:-ubuntu}"
-USER_HOME=$(eval echo "~$USER_TO_SET")
+USER_HOME=/home/${USER_TO_SET}
 
-# Step 1: Run the get_metadata script and capture its output
-log_message "Getting metadata from server"
-response=$(/etc/simplevm/utils/get_metadata.sh)
+# Read metadata from JSON file
+METADATA_FILE="/etc/simplevm/metadata.json"
+METADATA_AUTHORIZED_KEYS_FILE="$USER_HOME/.ssh/metadata_authorized_keys"
+if [ ! -f "$METADATA_FILE" ]; then
+  log_message "Metadata file $METADATA_FILE not found. Exiting."
+  exit 1
+fi
+
+response=$(cat "$METADATA_FILE")
 
 # Log the JSON response for debugging purposes
-log_message "Response from get_metadata.sh: $response"
+log_message "Response from metadata file: $response"
 
 # Check if the response is valid JSON
 if ! echo "$response" | jq . >/dev/null 2>&1; then
@@ -71,7 +75,7 @@ fi
 
 # Ensure the .ssh directory and metadata_authorized_keys file exist
 mkdir -p "$USER_HOME/.ssh"
-touch "$USER_HOME/.ssh/metadata_authorized_keys"
+touch "$METADATA_AUTHORIZED_KEYS_FILE"
 
 # Set the correct permissions for the .ssh directory and its contents
 chown -R $USER_TO_SET:$USER_TO_SET "$USER_HOME/.ssh"
@@ -85,10 +89,10 @@ while IFS= read -r key; do
 done <<< "$public_keys" > "$temp_file"
 
 # Compare old keys with new keys and update `metadata_authorized_keys`
-mv "$temp_file" "$USER_HOME/.ssh/metadata_authorized_keys"
+mv "$temp_file" "$METADATA_AUTHORIZED_KEYS_FILE"
 
 # Set the correct permissions for the metadata_authorized_keys file
-chown $USER_TO_SET:$USER_TO_SET "$USER_HOME/.ssh/metadata_authorized_keys"
+chown $USER_TO_SET:$USER_TO_SET "$METADATA_AUTHORIZED_KEYS_FILE"
 
 # Log the update operation
 log_message "Updated metadata_authorized_keys with the latest public keys from metadata"
