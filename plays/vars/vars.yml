@@ -9,9 +9,6 @@ remote_package_dir: "/home/ubuntu/simplevm_packages"
 # Base directory for the repository on the remote machine
 repo_base_dir: "/var/www/repos/apt"
 
-# Distribution name for reprepro (adjust the distribution name as needed)
-distribution_name: "jammy"
-
 inventory_hostname: apt.bi.denbi.de
 
 # Repository URL (if needed for checking out source code or other operations)
