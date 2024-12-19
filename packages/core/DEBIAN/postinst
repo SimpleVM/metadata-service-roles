@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+# Define the log file path
+LOG_FILE="/var/log/metadata.log"
+
+# Check if the log file exists; create it if it doesn't
+if [ ! -e "$LOG_FILE" ]; then
+  touch "$LOG_FILE"
+  chmod 644 "$LOG_FILE"  # Set appropriate permissions for the log file
+  echo "Created log file: $LOG_FILE"
+else
+  echo "Log file already exists: $LOG_FILE"
+fi
+
+# Continue with other post-installation tasks...
+
+exit 0
