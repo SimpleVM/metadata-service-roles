@@ -4,11 +4,11 @@
   vars_files:
     - ../vars/vars.yml
   roles:
-    - build_packages
+    - ../roles/build_packages
 
 - name: Add packages to repository
   hosts: remoteserver
   vars_files:
     - ../vars/vars.yml
   roles:
-    - deploy_packages
+    - ../roles/deploy_packages

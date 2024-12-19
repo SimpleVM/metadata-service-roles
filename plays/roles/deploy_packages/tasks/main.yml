@@ -1,8 +1,27 @@
 ---
-- name: Add packages to apt repository
-  shell: >
-    reprepro -b {{ repo_base_dir }} includedeb {{ repo_base_dir }} {{ remote_package_dir }}/{{ item }}.deb
-  with_items:
+
+- name: Debug reprepro commands
+  debug:
+    msg:
+      - " reprepro -b {{ repo_base_dir }} includedeb jammy {{ remote_package_dir }}/{{ item }}.deb"
+  loop:
     - core
     - meta
     - users
+
+- name: Add packages to apt repository
+  become: true
+  shell: >
+    reprepro -b {{ repo_base_dir }} includedeb jammy {{ remote_package_dir }}/{{ item }}.deb
+  loop:
+    - core
+    - meta
+    - users
+  register: reprepro_result
+  ignore_errors: yes
+
+- name: Check reprepro output
+  debug:
+    msg: "Warning: Package {{item.item}} already exists with different content; skipping."
+  loop: "{{reprepro_result.results}}"
+  when: item.stderr is defined and "cannot be included as" in item.stderr

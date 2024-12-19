@@ -1,4 +1,12 @@
 ---
+
+- name: Debug variable values
+  debug:
+    msg:
+      - "Branch Name: {{ branch_name }}"
+      - "Repository URL: {{ repo_url }}"
+      - "Local Build Directory: {{ local_build_dir }}"
+
 - name: Ensure local build directory exists
   file:
     path: "{{ local_build_dir }}"

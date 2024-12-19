@@ -19,7 +19,7 @@ repo_url: "https://github.com/simplevm/metadata-service-roles"
 
 # Branch name that might be dynamically set by GitHub Actions
 # branch_name should be set by GitHub Actions environment or passed explicitly to the playbook
-branch_name: "{{ lookup('env', 'BRANCH_NAME') | default('main') }}"
+branch_name: "{{ lookup('env', 'BRANCH_NAME') | default('main') or 'main' }}"
 
 # List of packages to be built and deployed
 package_list:
