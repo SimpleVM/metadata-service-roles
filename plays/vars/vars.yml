@@ -7,7 +7,7 @@ local_build_dir: "/tmp/build_packages"
 remote_package_dir: "/home/ubuntu/simplevm_packages"
 
 # Base directory for the repository on the remote machine
-repo_base_dir: "/var/www/repos/apt/jammy"
+repo_base_dir: "/var/www/repos/apt"
 
 # Distribution name for reprepro (adjust the distribution name as needed)
 distribution_name: "jammy"
@@ -22,7 +22,12 @@ repo_url: "https://github.com/simplevm/metadata-service-roles"
 branch_name: "{{ lookup('env', 'BRANCH_NAME') | default('main') or 'main' }}"
 
 # List of packages to be built and deployed
-package_list:
+packages:
   - core
   - meta
   - users
+
+releases:
+  - focal
+  - jammy
+  - noble

@@ -20,10 +20,7 @@
 
 - name: Build Debian package - {{ item }}
   command: "dpkg-deb --build {{ local_build_dir }}/packages/{{ item }}"
-  with_items:
-    - core
-    - meta
-    - users
+  loop: "{{ packages }}"
 
 - name: Transfer packages to remote server
   include_tasks: transfer_packages.yml
