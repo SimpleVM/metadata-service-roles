@@ -1,0 +1,49 @@
+#!/bin/bash
+
+set -e
+
+# Define the SSH configuration file
+SSHD_CONFIG_FILE="/etc/ssh/sshd_config"
+
+# Define the desired configuration line
+AUTHORIZED_KEYS_LINE="AuthorizedKeysFile .ssh/authorized_keys /home/%u/.ssh/authorized_keys /home/%u/.ssh/metadata_authorized_keys"
+
+# Back up the SSH configuration file
+cp "$SSHD_CONFIG_FILE" "${SSHD_CONFIG_FILE}.bak"
+
+# Debug: Print the actual content before modification
+echo "BEFORE MODIFICATION:"
+grep -E '^#?[[:space:]]*AuthorizedKeysFile' "$SSHD_CONFIG_FILE" || echo "No matching lines found."
+
+# Check if the line is already in the configuration file
+if grep -qE '^#?[[:space:]]*AuthorizedKeysFile' "$SSHD_CONFIG_FILE"; then
+  echo "MATCHED: An existing AuthorizedKeysFile line was found."
+  # If it exists, replace the line using sed
+  sed -i.bak -E "s|^#?[[:space:]]*AuthorizedKeysFile.*|$AUTHORIZED_KEYS_LINE|" "$SSHD_CONFIG_FILE"
+  echo "The line has been replaced with: $AUTHORIZED_KEYS_LINE"
+else
+  echo "NOT MATCHED: No existing AuthorizedKeysFile line found. Adding the line."
+  # If it doesn't exist, append the line
+  echo "$AUTHORIZED_KEYS_LINE" >> "$SSHD_CONFIG_FILE"
+fi
+
+# Debug: Verify the modification
+echo "AFTER MODIFICATION:"
+grep -E '^AuthorizedKeysFile' "$SSHD_CONFIG_FILE" || echo "No AuthorizedKeysFile line present."
+
+# Remove intermediate backup
+rm "${SSHD_CONFIG_FILE}.bak"
+
+systemctl daemon-reload
+
+service sshd restart
+
+# Enable the service and timer
+systemctl enable public-keys-sync.service
+systemctl enable public-keys-sync.timer
+
+# Start the service and timer
+systemctl start public-keys-sync.service
+systemctl start public-keys-sync.timer
+
+exit 0      
