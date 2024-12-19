@@ -11,4 +11,4 @@
   vars_files:
     - ../vars/vars.yml
   roles:
-    - deploy_packagesc
+    - deploy_packages
