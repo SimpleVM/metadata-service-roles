@@ -1,0 +1,14 @@
+---
+- name: Build and transfer Debian packages
+  hosts: localhost
+  vars_files:
+    - ../vars/vars.yml
+  roles:
+    - ../roles/build_packages
+
+- name: Add packages to repository
+  hosts: remoteserver
+  vars_files:
+    - ../vars/vars.yml
+  roles:
+    - ../roles/deploy_packages

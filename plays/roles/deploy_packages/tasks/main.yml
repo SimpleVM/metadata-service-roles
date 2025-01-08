@@ -1,0 +1,21 @@
+---
+
+- name: Debug reprepro commands
+  debug:
+    msg:
+      - "reprepro -b {{ repo_base_dir }}/{{item.0}} includedeb {{item.0}} {{ remote_package_dir }}/{{ item.1 }}.deb"
+  loop: "{{ releases | product(packages) | list }}"
+- name: Add packages to apt repository
+  become: true
+  shell: >
+    reprepro -b {{ repo_base_dir }}/{{item.0}} includedeb {{item.0}} {{ remote_package_dir }}/{{ item.1 }}.deb
+  loop: "{{ releases | product(packages) | list }}"
+  register: reprepro_result
+  ignore_errors: yes
+
+
+- name: Check reprepro output
+  debug:
+    msg: "Warning: Package {{item.item}} already exists with different content; skipping."
+  loop: "{{reprepro_result.results}}"
+  when: item.stderr is defined and "cannot be included as" in item.stderr
