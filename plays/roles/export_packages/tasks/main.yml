@@ -1,37 +1,26 @@
 ---
-    - name: "Retrieve GPG passphrase from control machine"
-      delegate_to: localhost
-      slurp:
-        src: "{{ passphrase_file }}"
-      register: passphrase_content
+- name: "Retrieve GPG passphrase from control machine"
+  delegate_to: localhost
+  slurp:
+    src: "{{ passphrase_file }}"
+  register: passphrase_content
 
-    - name: "Retrieve GPG key ID from control machine"
-      delegate_to: localhost
-      slurp:
-        src: "{{ key_id_file }}"
-      register: key_id_content
+- name: "Retrieve GPG key ID from control machine"
+  delegate_to: localhost
+  slurp:
+    src: "{{ key_id_file }}"
+  register: key_id_content
+- name: "Load GPG passphrase into gpg-agent on target"
+  shell: |
+    echo RELOADAGENT | gpg-connect-agent
+    echo "{{ passphrase_content.content | b64decode }}" | \
+    gpg-preset-passphrase --preset --passphrase-fd 0 {{ key_id_content.content | b64decode }}
+  args:
+    executable: /bin/bash
 
-    - name: "Create temporary GPG passphrase file on target"
-      copy:
-        content: "{{ passphrase_content.content | b64decode }}"
-        dest: /tmp/gpg_passphrase.txt
-        mode: '0600'
 
-    - name: "Load GPG key into gpg-agent on target"
-      shell: |
-        echo RELOADAGENT | gpg-connect-agent
-        echo "{{ lookup('file', '/tmp/gpg_passphrase.txt') }}" | \
-        gpg-preset-passphrase --preset --passphrase-fd 0 {{ key_id_content.content | b64decode }}
-      args:
-        executable: /bin/bash
-
-    - name: "Export packages for specified releases"
-      shell: "reprepro -b /var/www/repos/apt/{{ item }}/ export"
-      loop: "{{ releases }}"
-      register: export_result
-      ignore_errors: yes
-
-    - name: "Remove GPG passphrase file from target node"
-      file:
-        path: /tmp/gpg_passphrase.txt
-        state: absent
+- name: "Export packages for specified releases"
+  shell: "reprepro -b /var/www/repos/apt/{{ item }}/ export"
+  loop: "{{ releases }}"
+  register: export_result
+  ignore_errors: yes
