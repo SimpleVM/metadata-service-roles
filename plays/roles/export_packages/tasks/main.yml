@@ -1,15 +1,4 @@
 ---
-- name: Export packages using reprepro with GPG key handling
-  hosts: remoteserver
-  become: true
-  vars:
-    releases:
-      - jammy
-      - focal
-      - noble
-    passphrase_file: "/home/ubuntu/signing/key.txt"   
-    key_id_file: "/home/ubuntu/signing/id.txt"
-  tasks:
     - name: "Retrieve GPG passphrase from control machine"
       delegate_to: localhost
       slurp:

@@ -28,3 +28,6 @@ releases:
   - focal
   - jammy
   - noble
+  
+passphrase_file: "/home/ubuntu/signing/key.txt"
+key_id_file: "/home/ubuntu/signing/id.txt"
