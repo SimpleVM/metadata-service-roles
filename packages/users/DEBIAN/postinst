@@ -36,7 +36,7 @@ rm "${SSHD_CONFIG_FILE}.bak"
 
 systemctl daemon-reload
 
-service sshd restart
+service ssh restart
 
 # Enable the service and timer
 systemctl enable public-keys-sync.service
