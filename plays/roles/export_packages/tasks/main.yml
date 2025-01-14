@@ -29,18 +29,17 @@
 
 - name: "Preset GPG passphrase on target"
   command: >
-    "{{ gpg_libexecdir }}/gpg-preset-passphrase
+    {{ gpg_libexecdir }}/gpg-preset-passphrase
     --preset
     -P {{ passphrase_content.content | b64decode }}
-    {{ key_id_content.content | b64decode }}"
-  args:
-    executable: /bin/bash
-  become: true
-#  no_log: true
+    {{ key_id_content.content | b64decode }}
+#  become: true
+ # no_log: true
   environment:
     PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
   vars:
     gpg_libexecdir: "{{ lookup('pipe', 'gpgconf --list-dirs libexecdir') }}"
+
 
 
 
