@@ -1,28 +1,28 @@
----
 - name: "Retrieve GPG passphrase from control machine"
   delegate_to: localhost
   slurp:
     src: "{{ passphrase_file }}"
   register: passphrase_content
- # no_log: true
+  no_log: true
 
 - name: "Retrieve GPG key ID from control machine"
   delegate_to: localhost
   slurp:
     src: "{{ key_id_file }}"
   register: key_id_content
-  #no_log: true
-  
+  no_log: true
+
 - name: "Load GPG passphrase into gpg-agent on target"
   shell: |
-    gpg-connect-agent /bye
+    gpg-connect-agent reloadagent /bye
     echo "{{ passphrase_content.content | b64decode }}" | \
-    "$(gpgconf --list-dirs libexecdir)"/gpg-preset-passphrase --preset -P 0 {{ key_id_content.content | b64decode }}
+    "$(gpgconf --list-dirs libexecdir)"/gpg-preset-passphrase --preset -P {{ passphrase_content.content | b64decode }} {{ key_id_content.content | b64decode }}
   args:
     executable: /bin/bash
-  #no_log: true
+  no_log: true
   become: true
-
+  environment:
+    PINENTRY_PROGRAM: "/usr/bin/pinentry-curses" 
 
 - name: "Export packages for specified releases"
   command: reprepro -b /var/www/repos/apt/{{ item }}/ export
@@ -32,5 +32,4 @@
   become: true
   environment:
     GPG_BATCH: "1"
-    #GPG_AGENT_INFO: /run/user/1000/gnupg/S.gpg-agent.extra
-
+    PINENTRY_PROGRAM: "/usr/bin/pinentry-curses" 
