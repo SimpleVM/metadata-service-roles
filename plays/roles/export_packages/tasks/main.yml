@@ -21,6 +21,7 @@
   args:
     executable: /bin/bash
   no_log: true
+  become: true
 
 
 - name: "Export packages for specified releases"
