@@ -36,7 +36,7 @@
   args:
     executable: /bin/bash
   become: true
-  no_log: true
+#  no_log: true
   environment:
     PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
   vars:
