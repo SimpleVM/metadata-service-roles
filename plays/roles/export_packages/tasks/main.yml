@@ -30,3 +30,5 @@
   register: export_result
   ignore_errors: yes
   become: true
+  env:
+    GPG_AGENT_INFO: /run/user/1000/gnupg/S.gpg-agent
