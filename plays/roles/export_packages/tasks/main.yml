@@ -12,16 +12,34 @@
   register: key_id_content
   no_log: true
 
-- name: "Load GPG passphrase into gpg-agent on target"
+- name: "Validate passphrase and key ID content"
+  fail:
+    msg: "Passphrase or Key ID file content is empty."
+  when: 
+    - passphrase_content.content | default("") == ""
+    - key_id_content.content | default("") == ""
+
+- name: "Check if gpg-preset-passphrase is available"
+  command: which gpg-preset-passphrase
+  register: gpg_preset_check
+  failed_when: gpg_preset_check.rc != 0
+
+- name: "Reload gpg-agent on target"
+  shell: gpg-connect-agent reloadagent /bye
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: "Preset GPG passphrase on target"
   shell: |
-    gpg-connect-agent reloadagent /bye
     "$(gpgconf --list-dirs libexecdir)"/gpg-preset-passphrase --preset -P {{ passphrase_content.content | b64decode }} "{{ key_id_content.content | b64decode }}"
   args:
     executable: /bin/bash
-  #no_log: true
   become: true
+  #no_log: true
   environment:
     PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
+
 
 - name: "Export packages for specified releases"
   command: reprepro -b /var/www/repos/apt/{{ item }}/ export
@@ -30,5 +48,4 @@
   ignore_errors: yes
   become: true
   environment:
-    GPG_BATCH: "1"
     PINENTRY_PROGRAM: "/usr/bin/pinentry-curses" 
