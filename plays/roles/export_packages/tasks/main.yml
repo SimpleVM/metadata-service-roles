@@ -28,14 +28,20 @@
   become: true
 
 - name: "Preset GPG passphrase on target"
-  shell: |
-    "$(gpgconf --list-dirs libexecdir)"/gpg-preset-passphrase --preset -P {{ passphrase_content.content | b64decode }} "{{ key_id_content.content | b64decode }}"
+  command: >
+    "{{ gpg_libexecdir }}/gpg-preset-passphrase
+    --preset
+    -P {{ passphrase_content.content | b64decode }}
+    {{ key_id_content.content | b64decode }}"
   args:
     executable: /bin/bash
   become: true
-  #no_log: true
+  no_log: true
   environment:
     PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
+  vars:
+    gpg_libexecdir: "{{ lookup('pipe', 'gpgconf --list-dirs libexecdir') }}"
+
 
 
 - name: "Export packages for specified releases"
