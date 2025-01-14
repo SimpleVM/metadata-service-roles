@@ -28,3 +28,4 @@
   loop: "{{ releases }}"
   register: export_result
   ignore_errors: yes
+  become: true
