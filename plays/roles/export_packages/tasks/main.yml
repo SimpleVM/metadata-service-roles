@@ -35,7 +35,7 @@
     PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
   vars:
     gpg_libexecdir: "{{ lookup('pipe', 'gpgconf --list-dirs libexecdir') }}"
-
+    
 - name: "Export packages for specified releases"
   command: >
     reprepro -b /var/www/repos/apt/{{ item }}/ export
@@ -44,8 +44,8 @@
   become: true
   environment:
     PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
-    GPG_TTY: "{{ lookup('pipe', 'tty') }}"
   failed_when: 
     - export_result.rc != 0
     - "'There have been errors!' in export_result.stderr"
   changed_when: "'There have been errors!' not in export_result.stderr"
+
