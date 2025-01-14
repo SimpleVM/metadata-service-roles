@@ -31,6 +31,5 @@
   ignore_errors: yes
   become: true
   environment:
-    GPG_TTY: "{{ lookup('pipe', 'tty') }}"
     GPG_AGENT_INFO: /run/user/1000/gnupg/S.gpg-agent.extra
 
