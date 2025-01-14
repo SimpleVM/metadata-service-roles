@@ -4,12 +4,15 @@
   slurp:
     src: "{{ passphrase_file }}"
   register: passphrase_content
+  no_log: true
 
 - name: "Retrieve GPG key ID from control machine"
   delegate_to: localhost
   slurp:
     src: "{{ key_id_file }}"
   register: key_id_content
+  no_log: true
+  
 - name: "Load GPG passphrase into gpg-agent on target"
   shell: |
     echo RELOADAGENT | gpg-connect-agent
@@ -17,6 +20,7 @@
     "$(gpgconf --list-dirs libexecdir)"/gpg-preset-passphrase --preset -P 0 {{ key_id_content.content | b64decode }}
   args:
     executable: /bin/bash
+  no_log: true
 
 
 - name: "Export packages for specified releases"
