@@ -19,12 +19,8 @@
     - passphrase_content.content | default("") == ""
     - key_id_content.content | default("") == ""
 
-
-
 - name: "Reload gpg-agent on target"
   shell: gpg-connect-agent reloadagent /bye
-  args:
-    executable: /bin/bash
   become: true
 
 - name: "Preset GPG passphrase on target"
@@ -33,21 +29,23 @@
     --preset
     -P {{ passphrase_content.content | b64decode }}
     {{ key_id_content.content | b64decode }}
-#  become: true
- # no_log: true
+  become: true
+  no_log: true
   environment:
     PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
   vars:
     gpg_libexecdir: "{{ lookup('pipe', 'gpgconf --list-dirs libexecdir') }}"
 
-
-
-
 - name: "Export packages for specified releases"
-  command: reprepro -b /var/www/repos/apt/{{ item }}/ export
+  command: >
+    reprepro -b /var/www/repos/apt/{{ item }}/ export
   loop: "{{ releases }}"
   register: export_result
-  ignore_errors: yes
   become: true
   environment:
-    PINENTRY_PROGRAM: "/usr/bin/pinentry-curses" 
+    PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
+    GPG_TTY: "{{ lookup('pipe', 'tty') }}"
+  failed_when: 
+    - export_result.rc != 0
+    - "'There have been errors!' in export_result.stderr"
+  changed_when: "'There have been errors!' not in export_result.stderr"
