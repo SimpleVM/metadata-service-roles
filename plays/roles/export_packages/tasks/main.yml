@@ -19,10 +19,7 @@
     - passphrase_content.content | default("") == ""
     - key_id_content.content | default("") == ""
 
-- name: "Check if gpg-preset-passphrase is available"
-  command: which gpg-preset-passphrase
-  register: gpg_preset_check
-  failed_when: gpg_preset_check.rc != 0
+
 
 - name: "Reload gpg-agent on target"
   shell: gpg-connect-agent reloadagent /bye
