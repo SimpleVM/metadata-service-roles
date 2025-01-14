@@ -25,10 +25,10 @@
 
 
 - name: "Export packages for specified releases"
-  shell: "reprepro -b /var/www/repos/apt/{{ item }}/ export"
+  command: reprepro -b /var/www/repos/apt/{{ item }}/ export
   loop: "{{ releases }}"
   register: export_result
   ignore_errors: yes
   become: true
-  env:
+  environment:
     GPG_AGENT_INFO: /run/user/1000/gnupg/S.gpg-agent
