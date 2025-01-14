@@ -16,13 +16,13 @@
   shell: |
     gpg-connect-agent reloadagent /bye
     echo "{{ passphrase_content.content | b64decode }}" | \
-    "$(gpgconf --list-dirs libexecdir)"/gpg-preset-passphrase --preset -P {{ passphrase_content.content | b64decode }} {{ key_id_content.content | b64decode }}
+      "$(gpgconf --list-dirs libexecdir)"/gpg-preset-passphrase --preset -P "{{ key_id_content.content | b64decode }}"
   args:
     executable: /bin/bash
   #no_log: true
   become: true
   environment:
-    PINENTRY_PROGRAM: "/usr/bin/pinentry-curses" 
+    PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
 
 - name: "Export packages for specified releases"
   command: reprepro -b /var/www/repos/apt/{{ item }}/ export
