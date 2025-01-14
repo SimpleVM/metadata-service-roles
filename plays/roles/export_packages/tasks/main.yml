@@ -15,7 +15,7 @@
   
 - name: "Load GPG passphrase into gpg-agent on target"
   shell: |
-    echo RELOADAGENT | gpg-connect-agent
+    gpg-connect-agent /bye
     echo "{{ passphrase_content.content | b64decode }}" | \
     "$(gpgconf --list-dirs libexecdir)"/gpg-preset-passphrase --preset -P 0 {{ key_id_content.content | b64decode }}
   args:
@@ -31,4 +31,6 @@
   ignore_errors: yes
   become: true
   environment:
-    GPG_AGENT_INFO: /run/user/1000/gnupg/S.gpg-agent
+    GPG_TTY: "{{ lookup('pipe', 'tty') }}"
+    GPG_AGENT_INFO: /run/user/1000/gnupg/S.gpg-agent.extra
+
