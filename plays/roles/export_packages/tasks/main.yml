@@ -14,7 +14,7 @@
   shell: |
     echo RELOADAGENT | gpg-connect-agent
     echo "{{ passphrase_content.content | b64decode }}" | \
-    gpg-preset-passphrase --preset --passphrase-fd 0 {{ key_id_content.content | b64decode }}
+    "$(gpgconf --list-dirs libexecdir)"/gpg-preset-passphrase --preset --passphrase-fd 0 {{ key_id_content.content | b64decode }}
   args:
     executable: /bin/bash
 
