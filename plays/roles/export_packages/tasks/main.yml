@@ -31,5 +31,6 @@
   ignore_errors: yes
   become: true
   environment:
-    GPG_AGENT_INFO: /run/user/1000/gnupg/S.gpg-agent.extra
+    GPG_BATCH: "1"
+    #GPG_AGENT_INFO: /run/user/1000/gnupg/S.gpg-agent.extra
 
