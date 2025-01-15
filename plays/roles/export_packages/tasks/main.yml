@@ -23,11 +23,11 @@
     - gpg_key_id | default("") == ""
     
 - name: "Export packages for specified releases"
+  with_items: "{{ releases }}"
   expect:
     command: reprepro -b /var/www/repos/apt/{{ item }}/ export
     responses:
       'Passphrase:': '{{ gpg_passphrase }}'
-    loop: "{{ releases }}"
   register: export_result
   become: true
 
