@@ -1,13 +1,13 @@
 - name: "Retrieve GPG passphrase from control machine"
   delegate_to: localhost
-  slurp:
+  copy:
     src: "{{ passphrase_file }}"
   register: passphrase_content
   no_log: true
 
 - name: "Retrieve GPG key ID from control machine"
   delegate_to: localhost
-  slurp:
+  copy:
     src: "{{ key_id_file }}"
   register: key_id_content
   no_log: true
@@ -27,9 +27,8 @@
   command: >
     {{ gpg_libexecdir }}/gpg-preset-passphrase
     --preset
-    -P {{ passphrase_content.content | b64decode }}
-    {{ key_id_content.content | b64decode }}
-  become: true
+    -P {{ passphrase_content.content }}
+    {{ key_id_content.content }}
   no_log: true
   environment:
     PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
