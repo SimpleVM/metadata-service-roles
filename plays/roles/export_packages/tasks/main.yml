@@ -6,7 +6,7 @@
 
 - name: "Retrieve GPG key ID from control machine"
   delegate_to: localhost
-  command: cat "{{ key_id_file }}"
+  command: cat "{{ key_grip_file }}"
   register: key_id_content_raw
   no_log: true
  
@@ -28,19 +28,16 @@
 - name: "Preset GPG passphrase on target"
   command: >
     {{ gpg_libexecdir }}/gpg-preset-passphrase
-    --preset
     -P {{ gpg_passphrase }}
-    {{ gpg_key_id }}
-  no_log: true
-  environment:
-    PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
+    --preset {{ gpg_key_id }}
+
+  #no_log: true
   vars:
     gpg_libexecdir: "{{ lookup('pipe', 'gpgconf --list-dirs libexecdir') }}"
-    
+  become: true
+ 
 - name: "Export packages for specified releases"
   with_items: "{{ releases }}"
   shell: reprepro -b /var/www/repos/apt/{{ item }}/ export
-  environment:
-    GPG_TTY: "/dev/tty"
   become: true
 
