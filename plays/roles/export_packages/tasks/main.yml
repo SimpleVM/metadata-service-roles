@@ -9,14 +9,19 @@
   command: cat "{{ key_id_file }}"
   register: key_id_content_raw
  # no_log: true
-
+ 
+- name: "Set GPG passphrase and key ID as facts"
+  set_fact:
+    gpg_passphrase: "{{ passphrase_content_raw.stdout }}"
+    gpg_key_id: "{{ key_id_content_raw.stdout }}"
 
 - name: "Validate passphrase and key ID content"
   fail:
-    msg: "Passphrase or Key ID file content is empty."
-  when: 
-    - passphrase_content.content | default("") == ""
-    - key_id_content.content | default("") == ""
+    msg: "Passphrase or Key ID is empty."
+  when:
+    - gpg_passphrase | default("") == ""
+    - gpg_key_id | default("") == ""
+
 
 - name: "Reload gpg-agent on target"
   shell: gpg-connect-agent reloadagent /bye
@@ -26,8 +31,8 @@
   command: >
     {{ gpg_libexecdir }}/gpg-preset-passphrase
     --preset
-    -P {{ passphrase_content.content }}
-    {{ key_id_content.content }}
+    -P {{ gpg_passphrase }}
+    {{ gpg_key_id }}
   no_log: true
   environment:
     PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
