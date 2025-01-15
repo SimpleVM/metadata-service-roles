@@ -1,16 +1,15 @@
 - name: "Retrieve GPG passphrase from control machine"
   delegate_to: localhost
-  copy:
-    src: "{{ passphrase_file }}"
-  register: passphrase_content
+  command: cat "{{ passphrase_file }}"
+  register: passphrase_content_raw
  # no_log: true
 
 - name: "Retrieve GPG key ID from control machine"
   delegate_to: localhost
-  copy:
-    src: "{{ key_id_file }}"
-  register: key_id_content
+  command: cat "{{ key_id_file }}"
+  register: key_id_content_raw
  # no_log: true
+
 
 - name: "Validate passphrase and key ID content"
   fail:
