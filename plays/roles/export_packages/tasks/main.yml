@@ -1,0 +1,43 @@
+- name: "Retrieve GPG passphrase from control machine"
+  delegate_to: localhost
+  command: cat "{{ passphrase_file }}"
+  register: passphrase_content_raw
+  no_log: true
+
+- name: "Retrieve GPG key grip from control machine"
+  delegate_to: localhost
+  command: cat "{{ key_grip_file }}"
+  register: key_grip_content_raw
+  no_log: true
+ 
+- name: "Set GPG passphrase and key ID as facts"
+  set_fact:
+    gpg_passphrase: "{{ passphrase_content_raw.stdout }}"
+    gpg_key_grip: "{{ key_grip_content_raw.stdout }}"
+
+- name: "Validate passphrase and key ID content"
+  fail:
+    msg: "Passphrase or Key grip is empty."
+  when:
+    - gpg_passphrase | default("") == ""
+    - gpg_key_grip | default("") == ""
+- name: "Reload gpg-agent on target"
+  shell: gpg-connect-agent reloadagent /bye
+  become: true
+
+- name: "Preset GPG passphrase on target"
+  command: >
+    {{ gpg_libexecdir }}/gpg-preset-passphrase
+    -P {{ gpg_passphrase }}
+    --preset {{ gpg_key_grip }}
+
+  no_log: true
+  vars:
+    gpg_libexecdir: "{{ lookup('pipe', 'gpgconf --list-dirs libexecdir') }}"
+  become: true
+ 
+- name: "Export packages for specified releases"
+  with_items: "{{ releases }}"
+  shell: reprepro -b /var/www/repos/apt/{{ item }}/ export
+  become: true
+

@@ -23,7 +23,7 @@ METADATA_FILE="/etc/simplevm/metadata.json"
 METADATA_AUTHORIZED_KEYS_FILE="$USER_HOME/.ssh/metadata_authorized_keys"
 if [ ! -f "$METADATA_FILE" ]; then
   log_message "Metadata file $METADATA_FILE not found. Exiting."
-  exit 1
+  exit 0
 fi
 
 response=$(cat "$METADATA_FILE")
@@ -34,7 +34,7 @@ log_message "Response from metadata file: $response"
 # Check if the response is valid JSON
 if ! echo "$response" | jq . >/dev/null 2>&1; then
   log_message "Invalid JSON response. Exiting."
-  exit 1
+  exit 0
 fi
 
 # Extract the VERSION from the JSON response
@@ -48,7 +48,7 @@ for key in "${SCRIPT_DATA[@]}"; do
   # Check if the key exists in the JSON response
   if ! echo "$response" | jq -e ".${key}" >/dev/null 2>&1; then
     log_message "Needed data $key missing in metadata response. Exiting."
-    exit 1
+    exit 0
   fi
 
   # Extract the VERSION for the given key from the JSON response
