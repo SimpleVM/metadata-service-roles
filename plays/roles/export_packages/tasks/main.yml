@@ -44,5 +44,5 @@
   expect:
     command: reprepro -b /var/www/repos/apt/{{ item }}/ export
     responses:
-      'Passphrase:': '{{ reprepro_password }}'
+      'Passphrase:': '{{ gpg_passphrase }}'
 
