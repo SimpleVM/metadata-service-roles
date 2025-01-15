@@ -39,11 +39,8 @@
     
 - name: "Export packages for specified releases"
   with_items: "{{ releases }}"
+  shell: reprepro -b /var/www/repos/apt/{{ item }}/ export
+  environment:
+    GPG_TTY: "/dev/tty"
   become: true
-  vars:
-    PINENTRY_USER_DATA: true
-  expect:
-    command: reprepro -b /var/www/repos/apt/{{ item }}/ export
-    responses:
-      'Passphrase:': '{{ gpg_passphrase }}'
 
