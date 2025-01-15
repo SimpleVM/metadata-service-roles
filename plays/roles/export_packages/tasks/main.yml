@@ -39,6 +39,7 @@
     
 - name: "Export packages for specified releases"
   with_items: "{{ releases }}"
+  become: true
   vars:
     PINENTRY_USER_DATA: true
   expect:
