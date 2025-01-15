@@ -43,7 +43,6 @@ systemctl enable public-keys-sync.service
 systemctl enable public-keys-sync.timer
 
 # Start the service and timer
-systemctl start public-keys-sync.service
 systemctl start public-keys-sync.timer
 
 exit 0      
