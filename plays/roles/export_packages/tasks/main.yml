@@ -42,6 +42,8 @@
     command: reprepro -b /var/www/repos/apt/{{ item }}/ export
     responses:
       'Passphrase:': '{{ gpg_passphrase }}'
+  environment:
+    PINENTRY_PROGRAM: "/usr/bin/pinentry-curses"
   register: export_result
   become: true
 
