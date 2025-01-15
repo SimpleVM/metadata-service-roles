@@ -2,13 +2,13 @@
   delegate_to: localhost
   command: cat "{{ passphrase_file }}"
   register: passphrase_content_raw
- # no_log: true
+  no_log: true
 
 - name: "Retrieve GPG key ID from control machine"
   delegate_to: localhost
   command: cat "{{ key_id_file }}"
   register: key_id_content_raw
- # no_log: true
+  no_log: true
  
 - name: "Set GPG passphrase and key ID as facts"
   set_fact:
