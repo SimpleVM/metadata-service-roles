@@ -3,14 +3,14 @@
   copy:
     src: "{{ passphrase_file }}"
   register: passphrase_content
-  no_log: true
+ # no_log: true
 
 - name: "Retrieve GPG key ID from control machine"
   delegate_to: localhost
   copy:
     src: "{{ key_id_file }}"
   register: key_id_content
-  no_log: true
+ # no_log: true
 
 - name: "Validate passphrase and key ID content"
   fail:
