@@ -1,0 +1,9 @@
+[Unit]
+Description=Updates the metadata.json that reflects the state of the corresponding data for the machine from the metadata server
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+Unit=simplevm-metadata-synchronizer.service
+
+[Install]
+WantedBy=timers.target

@@ -14,6 +14,12 @@ else
   echo "Log file already exists: $LOG_FILE"
 fi
 
-# Continue with other post-installation tasks...
+
+# Enable the service and timer
+systemctl enable simplevm-metadata-synchronizer.service
+systemctl enable simplevm-metadata-synchronizer.timer
+
+# Start the service and timer
+systemctl start simplevm-metadata-synchronizer.timer
 
 exit 0
