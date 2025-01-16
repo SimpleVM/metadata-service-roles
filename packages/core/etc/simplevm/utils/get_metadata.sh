@@ -62,3 +62,5 @@ if mv -f "${TMP_FILE}" "${METADATA_OUTPUT_FILE}"; then
 else
   log_message "Error: Failed to save metadata to ${METADATA_OUTPUT_FILE}"
 fi
+
+### we need to add a service that pulls the data automatically
