@@ -13,4 +13,5 @@
     - core
     - meta
     - users
+    - updater
   delegate_to: "{{ inventory_hostname }}"
