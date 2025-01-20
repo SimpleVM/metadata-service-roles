@@ -1,0 +1,28 @@
+name: Build and Deploy Packages (Dev)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to checkout and deploy'
+        required: true
+        default: 'main'
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, apt]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}  
+
+      - name: Run Ansible Playbook
+        env:
+          BRANCH_NAME: ${{ github.event.inputs.branch }}  # Pass the selected branch to Ansible
+        run: |
+          eval `ssh-agent -s`
+          ssh-add ~/.ssh/apt.key
+          cd plays/playbooks
+          ansible-playbook -i ../inventory deploy.yml -e dev=true

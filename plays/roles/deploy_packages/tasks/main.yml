@@ -1,5 +1,6 @@
 ---
 
+
 - name: Debug reprepro commands
   debug:
     msg:
@@ -12,6 +13,22 @@
   loop: "{{ releases | product(packages) | list }}"
   register: reprepro_result
   ignore_errors: yes
+  when: not (dev | default(false))
+
+
+- name: Debug reprepro dev-package commands
+  debug:
+    msg:
+      - "reprepro -b {{ repo_base_dir }}/dev/{{item.0}} includedeb {{item.0}} {{ remote_package_dir }}/{{ item.1 }}.deb"
+  loop: "{{ releases | product(packages) | list }}"
+- name: Add packages to apt repository
+  become: true
+  shell: >
+    reprepro -b {{ repo_base_dir }}/dev/{{item.0}} includedeb {{item.0}} {{ remote_package_dir }}/{{ item.1 }}.deb
+  loop: "{{ releases | product(packages) | list }}"
+  register: reprepro_result
+  ignore_errors: yes
+  when: dev | default(false)
 
 
 - name: Check reprepro output
