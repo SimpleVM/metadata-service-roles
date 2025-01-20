@@ -23,8 +23,13 @@ packages:
   - core
   - meta
   - users
+  - updater
 
 releases:
   - focal
   - jammy
   - noble
+  
+passphrase_file: "/home/ubuntu/signing/key.txt"
+key_id_file: "/home/ubuntu/signing/id.txt"
+key_grip_file: "/home/ubuntu/signing/keygrip.txt"

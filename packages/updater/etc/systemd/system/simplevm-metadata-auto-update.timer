@@ -1,0 +1,9 @@
+[Unit]
+Description=Auto-Updates the packages of the SimpleVM-Metadata-Service
+[Timer]
+OnBootSec=1h
+OnUnitActiveSec=1h
+Unit=simplevm-metadata-auto-update.service
+
+[Install]
+WantedBy=timers.target

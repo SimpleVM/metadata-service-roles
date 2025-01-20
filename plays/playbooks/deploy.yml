@@ -12,3 +12,10 @@
     - ../vars/vars.yml
   roles:
     - ../roles/deploy_packages
+    
+- name: Export packages to be publicly available
+  hosts: remoteserver
+  vars_files:
+     - ../vars/vars.yml
+  roles:
+    - ../roles/export_packages
