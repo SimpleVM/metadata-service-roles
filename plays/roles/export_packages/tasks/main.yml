@@ -40,4 +40,12 @@
   with_items: "{{ releases }}"
   shell: reprepro -b /var/www/repos/apt/{{ item }}/ export
   become: true
+  when: not (dev | default(false))
+
+- name: "Export dev packages for specified releases"
+  with_items: "{{ releases }}"
+  shell: reprepro -b /var/www/repos/apt/dev/{{ item }}/ export
+  become: true
+  when: dev | default(false)
+
 

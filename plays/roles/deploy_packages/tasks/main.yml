@@ -19,12 +19,13 @@
 - name: Debug reprepro dev-package commands
   debug:
     msg:
-      - "reprepro -b {{ repo_base_dir }}/dev/{{item.0}} includedeb {{item.0}} {{ remote_package_dir }}/{{ item.1 }}.deb"
+      - "reprepro -b {{ repo_base_dir }}/dev/{{item.0}} includedeb {{item.0}} {{ remote_package_dir }}_dev/{{ item.1 }}_dev.deb"
   loop: "{{ releases | product(packages) | list }}"
-- name: Add packages to apt repository
+
+- name: Add dev-packages to dev-apt repository
   become: true
   shell: >
-    reprepro -b {{ repo_base_dir }}/dev/{{item.0}} includedeb {{item.0}} {{ remote_package_dir }}/{{ item.1 }}.deb
+    reprepro -b {{ repo_base_dir }}/dev/{{item.0}} includedeb {{item.0}} {{ remote_package_dir }}_dev/{{ item.1 }}_dev.deb
   loop: "{{ releases | product(packages) | list }}"
   register: reprepro_result
   ignore_errors: yes
