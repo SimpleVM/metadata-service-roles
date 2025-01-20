@@ -24,6 +24,15 @@
   loop: "{{ packages }}"
   when: dev | default(false)
 
+- name: Modify control file to append -dev to Package and Source
+  lineinfile:
+    path: "{{ local_build_dir }}/packages/{{item}}_dev/DEBIAN/control"
+    regexp: '^(Package|Source): (.*)$'
+    line: '\1: \2-dev'
+    backrefs: yes
+  loop: "{{ packages }}"
+  when: dev | default(false)
+
 - name: Build Debian package - {{ item }}
   command: "dpkg-deb --build {{ local_build_dir }}/packages/{{ item }}"
   loop: "{{ packages }}"
