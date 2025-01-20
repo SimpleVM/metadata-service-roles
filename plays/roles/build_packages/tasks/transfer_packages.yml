@@ -28,7 +28,7 @@
 
 - name: Copy Dev Debian packages to remote server
   ansible.builtin.copy:
-    src: "{{ local_build_dir }}/packages/{{ item }}_dev.deb"
+    src: "{{ local_build_dir }}/packages/{{ item }}.deb"
     dest: "{{ remote_package_dir }}_dev"
   with_items:
     - core_dev

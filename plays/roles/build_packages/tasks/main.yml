@@ -30,7 +30,7 @@
   when: not(dev | default(false))
 
 - name: Build Debian dev package - {{item}}_dev
-  command: "dpkg-deb  --build {{local_build_dir}}/packages/{{ item }}_dev"
+  command: "dpkg-deb  --build {{ local_build_dir }}/packages/{{ item }}_dev"
   loop:  "{{ packages }}"
   when: dev | default(false)
 
