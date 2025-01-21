@@ -1,0 +1,10 @@
+Package: simplevm-metadata-service-auto-update-dev
+Source: simplevm-metadata-service-dev
+Version: 0.0.1-dev
+Section: base
+Priority: optional
+Architecture: all
+Depends: jq
+Maintainer: SimpleVM Development Team<cloud@denbi.de>
+Uploaders: Nils Hoffmann <n.hoffmann@fz-juelich.de>, Qiqi Mok <q.mok@fz-juelich.de>, Peter Belmann <p.belmann@fz-juelich.de>, David Weinholz<d.weinholz@fz-juelich.de>, Viktor Rudko<v.rudko@fz-juelich.de>
+Description: Helper service that enables the automatic update of packages related to the Metadata-Server in the SimpleVM environment.

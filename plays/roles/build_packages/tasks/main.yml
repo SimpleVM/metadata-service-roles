@@ -24,12 +24,10 @@
   loop: "{{ packages }}"
   when: dev | default(false)
 
-- name: Modify control file to append -dev to Package and Source
-  lineinfile:
-    path: "{{ local_build_dir }}/packages/{{item}}_dev/DEBIAN/control"
-    regexp: '^(Package|Source): (.*)$'
-    line: '\1: \2-dev'
-    backrefs: yes
+- name: Copy dev-control files to dev package directories before build
+  copy:
+    src: "{{ local_build_dir }}/packages/dev-controls/control-{{ item }}"
+    dest: "{{ local_build_dir }}/packages/{{ item }}_dev/control"
   loop: "{{ packages }}"
   when: dev | default(false)
 
