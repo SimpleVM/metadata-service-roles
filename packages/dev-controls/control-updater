@@ -1,6 +1,6 @@
 Package: simplevm-metadata-service-auto-update-dev
 Source: simplevm-metadata-service-dev
-Version: 0.0.1-dev
+Version: 0.0.1
 Section: base
 Priority: optional
 Architecture: all
