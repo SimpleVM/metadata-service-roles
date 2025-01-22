@@ -1,4 +1,4 @@
-name: Build and Deploy Packages
+name: Build and Deploy Packages (Dev)
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.inputs.branch }}  # Use the branch input from workflow_dispatch
+          ref: ${{ github.event.inputs.branch }}  
 
       - name: Run Ansible Playbook
         env:
@@ -25,4 +25,4 @@ jobs:
           eval `ssh-agent -s`
           ssh-add ~/.ssh/apt.key
           cd plays/playbooks
-          ansible-playbook -i ../inventory deploy.yml
+          ansible-playbook -i ../inventory deploy.yml --tags="dev"

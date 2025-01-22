@@ -3,17 +3,20 @@
   command: cat "{{ passphrase_file }}"
   register: passphrase_content_raw
   no_log: true
+  tags: ['always']
 
 - name: "Retrieve GPG key grip from control machine"
   delegate_to: localhost
   command: cat "{{ key_grip_file }}"
   register: key_grip_content_raw
   no_log: true
+  tags: ['always']
  
 - name: "Set GPG passphrase and key ID as facts"
   set_fact:
     gpg_passphrase: "{{ passphrase_content_raw.stdout }}"
     gpg_key_grip: "{{ key_grip_content_raw.stdout }}"
+  tags: ['always']
 
 - name: "Validate passphrase and key ID content"
   fail:
@@ -22,8 +25,9 @@
     - gpg_passphrase | default("") == ""
     - gpg_key_grip | default("") == ""
 - name: "Reload gpg-agent on target"
-  shell: gpg-connect-agent reloadagent /bye
+  shell: gpg-connect-agent reloadagent /bye 
   become: true
+  tags: ['always']
 
 - name: "Preset GPG passphrase on target"
   command: >
@@ -35,9 +39,18 @@
   vars:
     gpg_libexecdir: "{{ lookup('pipe', 'gpgconf --list-dirs libexecdir') }}"
   become: true
+  tags: ['always']
  
 - name: "Export packages for specified releases"
   with_items: "{{ releases }}"
   shell: reprepro -b /var/www/repos/apt/{{ item }}/ export
   become: true
+  tags: ['production']
+
+- name: "Export dev packages for specified releases"
+  with_items: "{{ releases }}"
+  shell: reprepro -b /var/www/repos/apt/dev/{{ item }}/ export
+  become: true
+  tags: ['dev']
+
 

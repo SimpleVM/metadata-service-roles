@@ -1,9 +1,18 @@
 ---
+
 - name: Ensure remote package directory exists
   ansible.builtin.file:
     path: "{{ remote_package_dir }}"
     state: directory
   delegate_to: "{{ inventory_hostname }}"
+  tags: ['always']
+
+- name: Ensure remote dev-package directory exists
+  ansible.builtin.file:
+    path: "{{ remote_package_dir }}_dev"
+    state: directory
+  delegate_to: "{{ inventory_hostname }}"
+  tags: ['always']
 
 - name: Copy Debian packages to remote server
   ansible.builtin.copy:
@@ -15,3 +24,17 @@
     - users
     - updater
   delegate_to: "{{ inventory_hostname }}"
+  tags:  ['production']
+
+
+- name: Copy Dev Debian packages to remote server
+  ansible.builtin.copy:
+    src: "{{ local_build_dir }}/packages/{{ item }}.deb"
+    dest: "{{ remote_package_dir }}_dev"
+  with_items:
+    - core_dev
+    - meta_dev
+    - users_dev
+    - updater_dev
+  delegate_to: "{{ inventory_hostname }}"
+  tags: ['dev']

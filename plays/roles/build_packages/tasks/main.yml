@@ -6,21 +6,44 @@
       - "Branch Name: {{ branch_name }}"
       - "Repository URL: {{ repo_url }}"
       - "Local Build Directory: {{ local_build_dir }}"
+  tags: ['always']
 
 - name: Ensure local build directory exists
   file:
     path: "{{ local_build_dir }}"
     state: directory
+  tags: ['always']
 
 - name: Clone the repository
   git:
     repo: "{{ repo_url }}"
     dest: "{{ local_build_dir }}"
     version: "{{ branch_name }}"
+  tags: ['always']
+
+- name: Copy package-directories
+  command: >
+    cp -r "{{local_build_dir}}/packages/{{item}}" "{{local_build_dir}}/packages/{{item}}_dev"
+  loop: "{{ packages }}"
+  tags: ['dev']
+
+- name: Copy dev-control files to dev package directories before build
+  copy:
+    src: "{{ local_build_dir }}/packages/dev-controls/control-{{ item }}"
+    dest: "{{ local_build_dir }}/packages/{{ item }}_dev/control"
+  loop: "{{ packages }}"
+  tags: ['dev']
 
 - name: Build Debian package - {{ item }}
   command: "dpkg-deb --build {{ local_build_dir }}/packages/{{ item }}"
   loop: "{{ packages }}"
+  tags: ['production']
+
+- name: Build Debian dev package - {{item}}_dev
+  command: "dpkg-deb  --build {{ local_build_dir }}/packages/{{ item }}_dev"
+  loop:  "{{ packages }}"
+  tags: ['dev']
+
 
 - name: Transfer packages to remote server
   include_tasks: transfer_packages.yml
