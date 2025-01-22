@@ -6,6 +6,8 @@
     msg:
       - "reprepro -b {{ repo_base_dir }}/{{item.0}} includedeb {{item.0}} {{ remote_package_dir }}/{{ item.1 }}.deb"
   loop: "{{ releases | product(packages) | list }}"
+  tags: ['production']
+
 - name: Add packages to apt repository
   become: true
   shell: >
@@ -13,14 +15,14 @@
   loop: "{{ releases | product(packages) | list }}"
   register: reprepro_result
   ignore_errors: yes
-  when: not (dev | default(false))
-
+  tags: ['production']
 
 - name: Debug reprepro dev-package commands
   debug:
     msg:
       - "reprepro -b {{ repo_base_dir }}/dev/{{item.0}} includedeb {{item.0}} {{ remote_package_dir }}_dev/{{ item.1 }}_dev.deb"
   loop: "{{ releases | product(packages) | list }}"
+  tags: ['dev']
 
 - name: Add dev-packages to dev-apt repository
   become: true
@@ -29,7 +31,7 @@
   loop: "{{ releases | product(packages) | list }}"
   register: reprepro_result
   ignore_errors: yes
-  when: dev | default(false)
+  tags: ['dev']
 
 
 - name: Check reprepro output

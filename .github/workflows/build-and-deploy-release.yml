@@ -20,4 +20,4 @@ jobs:
           eval `ssh-agent -s`
           ssh-add ~/.ssh/apt.key
           cd plays/playbooks
-          ansible-playbook -i ../inventory deploy.yml
+          ansible-playbook -i ../inventory deploy.yml --tags="production"
