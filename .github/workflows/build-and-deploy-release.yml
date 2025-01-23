@@ -1,0 +1,23 @@
+name: Build and Deploy Packages on Release
+
+on:
+  release:
+    types: [published]  # Trigger the workflow when a release is published
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, apt]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.release.tag_name }}  # Use the release tag instead of a branch
+          
+      - name: Run Ansible Playbook
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}  # Pass the release tag to Ansible
+        run: |
+          eval `ssh-agent -s`
+          ssh-add ~/.ssh/apt.key
+          cd plays/playbooks
+          ansible-playbook -i ../inventory deploy.yml --tags="production"
