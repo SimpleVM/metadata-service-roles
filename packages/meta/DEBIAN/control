@@ -1,6 +1,6 @@
 Package: simplevm-metadata-service
 Source: simplevm-metadata-service
-Version: 0.1.9
+Version: 0.2.0
 Section: metapackages
 Priority: optional
 Architecture: all
