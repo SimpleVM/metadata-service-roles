@@ -1,10 +1,10 @@
 Package: simplevm-metadata-service
 Source: simplevm-metadata-service
-Version: 0.2.1
+Version: 0.2.2
 Section: metapackages
 Priority: optional
 Architecture: all
-Depends: simplevm-metadata-service-public-key-synchronization (>= 0.1.8), simplevm-metadata-service-core (>= 0.1.11), simplevm-metadata-service-auto-update (>= 0.0.1)
+Depends: simplevm-metadata-service-public-key-synchronization (>= 0.1.8), simplevm-metadata-service-core (>= 0.1.12), simplevm-metadata-service-auto-update (>= 0.0.1)
 Maintainer: SimpleVM Development Team<cloud@denbi.de>
 Uploaders: Nils Hoffmann <n.hoffmann@fz-juelich.de>, Qiqi Mok <q.mok@fz-juelich.de>, Peter Belmann <p.belmann@fz-juelich.de>, David Weinholz<d.weinholz@fz-juelich.de>, Viktor Rudko<v.rudko@fz-juelich.de>
 Description: Core service that enables the retrieval of metadata from the Metadata-Server in the SimpleVM environment.
