@@ -9,8 +9,8 @@ log_message() {
 
 TIMER_PATH="/etc/systemd/system/simplevm-metadata-synchronizer.timer"
 
-DEFAULT_INTERVAL="5min"
-MAX_INTERVAL="30min"
+DEFAULT_INTERVAL=5
+MAX_INTERVAL=30
 
 current_interval=$(grep '^OnUnitActiveSec=' $TIMER_PATH | cut -d= -f2 | sed 's/min//')
 log_message "This is my interval: ${current_interval}"
@@ -18,6 +18,7 @@ log_message "This is my interval: ${current_interval}"
 
 set_new_interval() {
     # Update the timer file
+    echo "Running: sed -i 's/^OnUnitActiveSec=.*/OnUnitActiveSec=$1/' $TIMER_PATH"
     sudo sed -i "s/^OnUnitActiveSec=.*/OnUnitActiveSec=$1/" $TIMER_PATH
     # Reload systemd to apply changes
     sudo systemctl daemon-reload
@@ -30,7 +31,8 @@ extend_interval() {
     new_interval=$((current_interval + 5))
     # Ensure we do not exceed the max interval
     if (( new_interval > MAX_INTERVAL )); then
-        new_interval=$MAX_INTERVAL
+        echo "Timer already got extended to max"
+        exit 1
     fi
     echo "Extending timer interval to ${new_interval} minutes"
     set_new_interval "${new_interval}min"
@@ -38,7 +40,7 @@ extend_interval() {
 
 reset_interval() {
     echo "Resetting timer interval to default: $DEFAULT_INTERVAL"
-    set_new_interval "$DEFAULT_INTERVAL"
+    set_new_interval "${DEFAULT_INTERVAL}min"
 }
 
 /etc/simplevm/utils/rotate_logs.sh
@@ -85,15 +87,26 @@ if [ -z "${REAL_METADATA_ENDPOINT}" ]; then
 fi
 
 # Fetch the actual metadata from the extracted endpoint
-LOCAL_IP="192.168.2.37" # adjust for development purposes
-log_message ${LOCAL_IP}
-#LOCAL_IP=$(hostname -I | awk '{print $1}')
+# LOCAL_IP="192.168.2.37" # adjust for development purposes
+# log_message ${LOCAL_IP}
+
+LOCAL_IP=$(hostname -I | awk '{print $1}')
 metadata_response=$(curl -s -X GET "${REAL_METADATA_ENDPOINT}/metadata/${LOCAL_IP}" -H "${AUTH_HEADER}")
 
 if [ $? -ne 0 ]; then
   log_message "Error: Failed to fetch metadata"
   extend_interval
   exit 1
+fi
+
+key_not_found_flag=$(echo "$metadata_response" | jq -r '.detail')
+
+if [ "$key_not_found_flag" == "Key not found" ]; then
+    echo "Key not found in the response. Extending interval..."
+    extend_interval
+    exit 1
+else
+  log_message "this got through"
 fi
 
 # Write the metadata to a temporary file
