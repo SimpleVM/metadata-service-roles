@@ -101,7 +101,7 @@ fi
   key_not_found_flag=$(echo "$metadata_response" | jq -r '.detail')
 
   if [ "$key_not_found_flag" == "Key not found" ]; then
-      echo "Key not found in the response. Extending interval..."
+      echo "Key not found in the response."
       reset_interval
       exit 1
   elif [ "$key_not_found_flag" == "Too Many Requests" ]; then
