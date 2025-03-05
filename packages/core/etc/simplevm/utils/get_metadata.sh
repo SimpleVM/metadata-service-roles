@@ -10,7 +10,7 @@ log_message() {
 TIMER_PATH="/etc/systemd/system/simplevm-metadata-synchronizer.timer"
 
 DEFAULT_INTERVAL=5
-MAX_INTERVAL=30
+MAX_INTERVAL=15
 
 current_interval=$(grep '^OnUnitActiveSec=' $TIMER_PATH | cut -d= -f2 | sed 's/min//')
 log_message "This is my interval: ${current_interval}"
@@ -32,14 +32,13 @@ extend_interval() {
     # Ensure we do not exceed the max interval
     if (( new_interval > MAX_INTERVAL )); then
         echo "Timer already got extended to max"
-        exit 1
     fi
-    echo "Extending timer interval to ${new_interval} minutes"
+    log_message "Extending timer interval to ${new_interval} minutes"
     set_new_interval "${new_interval}min"
 }
 
 reset_interval() {
-    echo "Resetting timer interval to default: $DEFAULT_INTERVAL"
+    log_message "Resetting timer interval to default: $DEFAULT_INTERVAL"
     set_new_interval "${DEFAULT_INTERVAL}min"
 }
 
@@ -68,14 +67,14 @@ if [ -z "${REAL_METADATA_ENDPOINT}" ]; then
 
   if [ $? -ne 0 ]; then
     log_message "Error: Failed to fetch metadata endpoint"
-    extend_interval
+    reset_interval
     exit 1  
   fi
 
   # Validate the JSON response
   if ! jq -e '.metadata_endpoint' <<< "${info_response}" &> /dev/null; then
     log_message "Error: Invalid JSON response from metadata endpoint"
-    extend_interval
+    reset_interval
     exit 1
   fi
 
@@ -95,19 +94,22 @@ metadata_response=$(curl -s -X GET "${REAL_METADATA_ENDPOINT}/metadata/${LOCAL_I
 
 if [ $? -ne 0 ]; then
   log_message "Error: Failed to fetch metadata"
-  extend_interval
+  reset_interval
   exit 1
 fi
 
-key_not_found_flag=$(echo "$metadata_response" | jq -r '.detail')
+  key_not_found_flag=$(echo "$metadata_response" | jq -r '.detail')
 
-if [ "$key_not_found_flag" == "Key not found" ]; then
-    echo "Key not found in the response. Extending interval..."
-    extend_interval
-    exit 1
-else
-  log_message "this got through"
-fi
+  if [ "$key_not_found_flag" == "Key not found" ]; then
+      echo "Key not found in the response. Extending interval..."
+      reset_interval
+      exit 1
+  elif [ "$key_not_found_flag" == "Too Many Requests" ]; then
+      echo "Too many requests sent to the server. Extending interval..."
+      extend_interval
+      exit 1
+
+  fi
 
 # Write the metadata to a temporary file
 TMP_FILE="${METADATA_OUTPUT_FILE}.tmp"
@@ -117,7 +119,11 @@ echo "${metadata_response}"| jq > "${TMP_FILE}"
 if mv -f "${TMP_FILE}" "${METADATA_OUTPUT_FILE}"; then
   log_message "Metadata saved to ${METADATA_OUTPUT_FILE}"
   reset_interval
+  exit 0
+
 else
   extend_interval
   log_message "Error: Failed to save metadata to ${METADATA_OUTPUT_FILE}"
+  exit 1
 fi
+
