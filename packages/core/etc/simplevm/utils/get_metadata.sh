@@ -86,10 +86,12 @@ if [ -z "${REAL_METADATA_ENDPOINT}" ]; then
 fi
 
 # Fetch the actual metadata from the extracted endpoint
-# LOCAL_IP="192.168.2.37" # adjust for development purposes
-# log_message ${LOCAL_IP}
 
 LOCAL_IP=$(hostname -I | awk '{print $1}')
+full_response=$(curl -s -o - -w "%{http_code}" -X GET "${REAL_METADATA_ENDPOINT}/metadata/${LOCAL_IP}" -H "${AUTH_HEADER}")
+
+response_status="${full_response: -3}"
+metadata_response="${full_response%???}"
 metadata_response=$(curl -s -X GET "${REAL_METADATA_ENDPOINT}/metadata/${LOCAL_IP}" -H "${AUTH_HEADER}")
 
 if [ $? -ne 0 ]; then
@@ -98,32 +100,52 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-  key_not_found_flag=$(echo "$metadata_response" | jq -r '.detail')
 
-  if [ "$key_not_found_flag" == "Key not found" ]; then
-      echo "Key not found in the response."
-      reset_interval
-      exit 1
-  elif [ "$key_not_found_flag" == "Too Many Requests" ]; then
-      echo "Too many requests sent to the server. Extending interval..."
-      extend_interval
-      exit 1
 
+# Check the status code and act accordingly
+if [ "$response_status" -eq 200 ]; then
+  # Successful response; proceed to any further processing if needed
+  # Write the metadata to a temporary file
+  TMP_FILE="${METADATA_OUTPUT_FILE}.tmp"
+  echo "${metadata_response}"| jq > "${TMP_FILE}"
+
+  # Rename the temporary file to the original filename
+  if mv -f "${TMP_FILE}" "${METADATA_OUTPUT_FILE}"; then
+    log_message "Metadata saved to ${METADATA_OUTPUT_FILE}"
+    reset_interval
+    exit 0
+
+  else
+    log_message "Error: Failed to save metadata to ${METADATA_OUTPUT_FILE}"
+    reset_interval
+    exit 1
   fi
 
-# Write the metadata to a temporary file
-TMP_FILE="${METADATA_OUTPUT_FILE}.tmp"
-echo "${metadata_response}"| jq > "${TMP_FILE}"
+elif [ "$response_status" -eq 400 ] || [ "$response_status" -eq 403 ]; then
+    echo "Error: Too many requests sent to the server. Extending interval..."
+    extend_interval
+    exit 1
 
-# Rename the temporary file to the original filename
-if mv -f "${TMP_FILE}" "${METADATA_OUTPUT_FILE}"; then
-  log_message "Metadata saved to ${METADATA_OUTPUT_FILE}"
-  reset_interval
-  exit 0
+elif [ "$response_status" -eq 404 ]; then
+    echo "Key not found in the response."
+    reset_interval
+    exit 1
+
+elif [ "$response_status" -eq 503 ] || [ "$response_status" -eq 504 ]; then
+    echo "Service unavailable or gateway timeout. Extending interval..."
+    extend_interval
+    exit 1
+
+elif [ "$response_status" -eq 500 ]; then
+    echo "Internal server error. Resetting interval..."
+    reset_interval
+    exit 1
 
 else
-  extend_interval
-  log_message "Error: Failed to save metadata to ${METADATA_OUTPUT_FILE}"
-  exit 1
+    echo "Unexpected error or server condition. HTTP Status: $response_status"
+    reset_interval
+    exit 1
 fi
+
+
 
