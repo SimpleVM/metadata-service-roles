@@ -121,30 +121,41 @@ if [ "$response_status" -eq 200 ]; then
     exit 1
   fi
 
-elif [ "$response_status" -eq 400 ] || [ "$response_status" -eq 403 ]; then
-    echo "Error: Too many requests sent to the server. Extending interval..."
-    extend_interval
-    exit 1
+elif [ "$response_status" -eq 400 ]; then
+  echo "Error: Bad request sent to the server. Extending interval..."
+  extend_interval
+  exit 1
+
+elif [ "$response_status" -eq 403 ]; then
+  echo "Error: Forbidden request. Not allowed to access this resource. Extending interval..."
+  extend_interval
+  exit 1
+    
 
 elif [ "$response_status" -eq 404 ]; then
-    echo "Key not found in the response."
-    reset_interval
-    exit 1
+  echo "Error: Key not found in the response. Resetting interval..."
+  reset_interval
+  exit 1
+
+elif [ "$response_status" -eq 429 ]; then
+  echo "Error: Too many requests received from this client. Extending interval..."
+  extend_interval
+  exit 1
 
 elif [ "$response_status" -eq 503 ] || [ "$response_status" -eq 504 ]; then
-    echo "Service unavailable or gateway timeout. Extending interval..."
-    extend_interval
-    exit 1
+  echo "Error: Service unavailable or gateway timeout. Extending interval..."
+  extend_interval
+  exit 1
 
 elif [ "$response_status" -eq 500 ]; then
-    echo "Internal server error. Resetting interval..."
-    reset_interval
-    exit 1
+  echo "Internal server error. Resetting interval..."
+  reset_interval
+  exit 1
 
 else
-    echo "Unexpected error or server condition. HTTP Status: $response_status"
-    reset_interval
-    exit 1
+  echo "Unexpected error or server condition. HTTP Status: $response_status. Resetting interval..."
+  reset_interval
+  exit 1
 fi
 
 
