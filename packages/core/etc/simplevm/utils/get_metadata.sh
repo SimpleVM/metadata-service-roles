@@ -92,7 +92,6 @@ full_response=$(curl -s -o - -w "%{http_code}" -X GET "${REAL_METADATA_ENDPOINT}
 
 response_status="${full_response: -3}"
 metadata_response="${full_response%???}"
-metadata_response=$(curl -s -X GET "${REAL_METADATA_ENDPOINT}/metadata/${LOCAL_IP}" -H "${AUTH_HEADER}")
 
 if [ $? -ne 0 ]; then
   log_message "Error: Failed to fetch metadata"
