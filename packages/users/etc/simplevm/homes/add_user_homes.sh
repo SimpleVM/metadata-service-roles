@@ -30,7 +30,7 @@ fi
 
 # Extract versions
 metadata_version=$(echo "$response" | jq -r '.metadata_version')
-home_users_version=$(echo "$response" | jq -r '.home_users_version')
+home_users_version=$(echo "$response" | jq -r '.home_user_version')
 
 log_message "Metadata version: $metadata_version"
 log_message "Home users version: $home_users_version"
@@ -58,7 +58,7 @@ log_message "Found $user_count home_users"
 
 # Process each user
 for ((i=0; i<user_count; i++)); do
-  username=$(echo "$response" | jq -r ".home_users[$i].name")
+  username=$(echo "$response" | jq -r ".home_users[$i].unix_name")
   # Skip if username is empty
   if [ -z "$username" ] || [ "$username" = "null" ]; then
     log_message "Warning: Missing or null 'name' for home_user #$i. Skipping."
