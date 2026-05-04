@@ -11,7 +11,7 @@ if [[ $# -lt 1 ]]; then
     echo "Usage: $0 <username> [public_key ...]" >&2
     exit 1
 fi
-
+SCRIPT_VERSION="1.0.0"
 USERNAME="$1"
 shift
 
@@ -30,6 +30,13 @@ USER_EXISTS=false
 if id "$USERNAME" &>/dev/null; then
     USER_EXISTS=true
     log "User '$USERNAME' already exists."
+    log "Reactivating user '$USERNAME' (if disabled)..."
+
+    # unlock account
+    usermod -U "$USERNAME" 2>/dev/null || true
+
+    # restore shell
+    usermod -s /bin/bash "$USERNAME"
 else
     log "Creating user '$USERNAME'..."
     useradd -m -s /bin/bash -U "$USERNAME" || {
@@ -59,20 +66,23 @@ touch "$METADATA_AUTH_KEYS"
 chown "$USERNAME:$USERNAME" "$METADATA_AUTH_KEYS"
 chmod 600 "$METADATA_AUTH_KEYS"
 
-# Only when user is newly created: write provided keys to authorized_keys
-if [[ "$USER_EXISTS" == "false" ]]; then
-    if [[ $# -gt 0 ]]; then
-        # Write all provided keys to authorized_keys
-        echo "$@" > "$USER_AUTH_KEYS"
-        chown "$USERNAME:$USERNAME" "$USER_AUTH_KEYS"
-        chmod 600 "$USER_AUTH_KEYS"
-        log "Initialized authorized_keys for new user '$USERNAME'."
-    else
-        log "Warning: No keys provided for new user '$USERNAME'. authorized_keys left empty."
-    fi
+
+if [[ $# -gt 0 ]]; then
+    log "Setting authorized_keys for '$USERNAME' (create or update)"
+
+    # overwrite with provided keys (source of truth = arguments)
+    printf "%s\n" "$@" > "$METADATA_AUTH_KEYS"
+
 else
-    log "User '$USERNAME' already exists → authorized_keys unchanged."
+    log "No keys provided for '$USERNAME' → leaving authorized_keys empty"
+
+    # ensure file is empty but valid
+    : > "$METADATA_AUTH_KEYS"
 fi
+touch "$USER_AUTH_KEYS"
+
+chown "$USERNAME:$USERNAME" "$USER_AUTH_KEYS"
+chmod 600 "$USER_AUTH_KEYS"
 
 # Remove user from sudo/wheel/admin groups (prevent privilege escalation)
 for grp in sudo wheel admin; do

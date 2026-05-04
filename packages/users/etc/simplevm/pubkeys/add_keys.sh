@@ -52,24 +52,25 @@ if ! /etc/simplevm/utils/check_version.sh "metadata_version" "$SCRIPT_VERSION" "
     exit 1
   fi
 
-if ! /etc/simplevm/utils/check_version.sh "ssh_users" "$SCRIPT_VERSION" "$ssh_user_version"; then
+if ! /etc/simplevm/utils/check_version.sh "ssh_user_version" "$SCRIPT_VERSION" "$ssh_user_version"; then
     log_message "SSH user version $ssh_user_version is incompatible. Exiting."
     exit 1
 fi
 
-#  Prüfe, ob ssh_users existiert
-if ! echo "$response" | jq -e ".${SSH_USER_KEY}" >/dev/null 2>&1; then
-    log_message "No ssh_users in metadata. Skipping."
-    exit 0
+# Check if ssh_users exists
+if ! jq -e '.ssh_users?' "$METADATA_FILE" >/dev/null 2>&1; then
+  log_message "No ssh_users in metadata. Skipping."
+  exit 0
 fi
 
+# Extract public keys and set unix_name as comment
+public_keys=$(jq -r '
+  .ssh_users[]?
+  | . as $u
+  | (.public_keys // [])[]
+  | split(" ")[:2] | join(" ") + " " + $u.unix_name
+' "$METADATA_FILE" | sort -u)
 
-
-# Extract public_keys from the nested JSON structure
-public_keys=$(echo "$response" | jq -r ".${SSH_USER_KEY}[] | .public_keys[]? // empty")
-
-
-# Check if public_keys is empty
 if [ -z "$public_keys" ]; then
   log_message "No public keys found. metadata_authorized_keys file not updated."
   exit 0

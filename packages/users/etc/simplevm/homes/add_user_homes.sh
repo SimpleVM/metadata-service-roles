@@ -1,11 +1,13 @@
 #!/bin/bash
+
+set -euo pipefail
+IFS=$'\n\t'
 # Path to the log file
 LOG_FILE="/var/log/metadata_home_users.log"
-/etc/simplevm/utils/rotate_logs.sh
+/etc/simplevm/utils/rotate_logs.sh || log_message "log rotation failed"
 
 # Script version and affected keys
 SCRIPT_VERSION="1.0.0"
-SCRIPT_DATA=("home_users")
 
 # Function to log messages with timestamps
 log_message() {
@@ -20,7 +22,7 @@ if [ ! -f "$METADATA_FILE" ]; then
 fi
 
 response=$(cat "$METADATA_FILE")
-log_message "Response from metadata file: $response"
+log_message "Metadata loaded"
 
 # Validate JSON
 if ! echo "$response" | jq . >/dev/null 2>&1; then
@@ -52,25 +54,13 @@ if ! echo "$response" | jq -e ".home_users" >/dev/null 2>&1; then
   exit 0
 fi
 
-# Count users
-user_count=$(echo "$response" | jq -r '.home_users | length')
-log_message "Found $user_count home_users"
-
-# Process each user
-for ((i=0; i<user_count; i++)); do
-  username=$(echo "$response" | jq -r ".home_users[$i].unix_name")
-  # Skip if username is empty
-  if [ -z "$username" ] || [ "$username" = "null" ]; then
-    log_message "Warning: Missing or null 'name' for home_user #$i. Skipping."
-    continue
-  fi
 
   # Extract public keys as separate args (preserving multi-line keys if needed)
-  keys_json=".home_users[$i].public_keys[]?"
-  public_keys=$(echo "$response" | jq -r "$keys_json")
+keys_json=".home_users[$i].public_keys[]?"
+public_keys=$(echo "$response" | jq -r "$keys_json")
 
   # If no keys, skip this user (create_user_home.sh may handle it, but let's be explicit)
-  if [ -z "$public_keys" ]; then
+if [ -z "$public_keys" ]; then
     log_message "No public keys for user '$username'. Skipping."
     continue
   fi
