@@ -1,4 +1,5 @@
 #!/bin/bash
+chmod 751 /home
 set -euo pipefail
 
 LOG_FILE="/var/log/metadata_home_users.log"
