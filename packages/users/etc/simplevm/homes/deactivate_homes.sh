@@ -28,8 +28,8 @@ mapfile -t valid_users < <(
 )
 
 if [ "${#valid_users[@]}" -eq 0 ]; then
-  log_message "ERROR: no valid home_users found"
-  exit 1
+  log_message "WARNING: no valid home_users found in metadata, disabling all non-system /home users"
+  valid_users=("__none__")
 fi
 
 log_message "Loaded ${#valid_users[@]} valid home_users"
@@ -38,9 +38,14 @@ log_message "Loaded ${#valid_users[@]} valid home_users"
 # 2. Build lookup (fast exact match)
 # ---------------------------------------------------
 declare -A allowed
-for u in "${valid_users[@]}"; do
-  allowed["$u"]=1
-done
+if [ "${valid_users[0]}" = "__none__" ]; then
+  # No home_users in metadata — everyone is an orphan
+  log_message "No valid home_users in metadata — all /home users will be disabled"
+else
+  for u in "${valid_users[@]}"; do
+    allowed["$u"]=1
+  done
+fi
 
 # ---------------------------------------------------
 # 3. Scan system users

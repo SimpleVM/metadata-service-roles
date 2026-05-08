@@ -1,12 +1,9 @@
 #!/bin/bash
 
 set -euo pipefail
-IFS=$'\n\t'
-# Path to the log file
-LOG_FILE="/var/log/metadata_home_users.log"
-/etc/simplevm/utils/rotate_logs.sh || log_message "log rotation failed"
 
-# Script version and affected keys
+LOG_FILE="/var/log/metadata_home_users.log"
+METADATA_FILE="/etc/simplevm/metadata.json"
 SCRIPT_VERSION="1.0.0"
 
 # Function to log messages with timestamps
@@ -14,8 +11,8 @@ log_message() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
 }
 
-# Read metadata from JSON file
-METADATA_FILE="/etc/simplevm/metadata.json"
+/etc/simplevm/utils/rotate_logs.sh 2>/dev/null || true
+
 if [ ! -f "$METADATA_FILE" ]; then
   log_message "Metadata file $METADATA_FILE not found. Exiting."
   exit 0
@@ -30,21 +27,14 @@ if ! echo "$response" | jq . >/dev/null 2>&1; then
   exit 0
 fi
 
-# Extract versions
-metadata_version=$(echo "$response" | jq -r '.metadata_version')
-home_users_version=$(echo "$response" | jq -r '.home_user_version')
-
-log_message "Metadata version: $metadata_version"
-log_message "Home users version: $home_users_version"
-
 # Check version compatibility
-if ! /etc/simplevm/utils/check_version.sh "metadata_version" "$SCRIPT_VERSION" "$metadata_version"; then
-  log_message "metadata_version $metadata_version incompatible. Exiting."
+if ! /etc/simplevm/utils/check_version.sh "metadata_version" "$SCRIPT_VERSION" "$(echo "$response" | jq -r '.metadata_version')"; then
+  log_message "metadata_version $(echo "$response" | jq -r '.metadata_version') incompatible. Exiting."
   exit 1
 fi
 
-if ! /etc/simplevm/utils/check_version.sh "home_users" "$SCRIPT_VERSION" "$home_users_version"; then
-  log_message "home_users version $home_users_version incompatible. Exiting."
+if ! /etc/simplevm/utils/check_version.sh "home_users" "$SCRIPT_VERSION" "$(echo "$response" | jq -r '.home_user_version')"; then
+  log_message "home_users version $(echo "$response" | jq -r '.home_user_version') incompatible. Exiting."
   exit 1
 fi
 
@@ -54,27 +44,36 @@ if ! echo "$response" | jq -e ".home_users" >/dev/null 2>&1; then
   exit 0
 fi
 
+# Iterate over all home_users
+user_count=$(echo "$response" | jq '.home_users | length')
+for (( idx=0; idx<user_count; idx++ )); do
+  username=$(echo "$response" | jq -r ".home_users[$idx].unix_name")
 
-  # Extract public keys as separate args (preserving multi-line keys if needed)
-keys_json=".home_users[$i].public_keys[]?"
-public_keys=$(echo "$response" | jq -r "$keys_json")
-
-  # If no keys, skip this user (create_user_home.sh may handle it, but let's be explicit)
-if [ -z "$public_keys" ]; then
-    log_message "No public keys for user '$username'. Skipping."
+  if [ -z "$username" ] || [ "$username" = "null" ]; then
+    log_message "Skipping entry $idx: no unix_name"
     continue
   fi
 
-  log_message "Processing user '$username' with $(echo "$public_keys" | wc -l) key(s)"
+  # Extract public keys for this user
+  public_keys=$(echo "$response" | jq -r ".home_users[$idx].public_keys[]?" 2>/dev/null)
 
-  # Prepare keys as arguments: quote each key to handle multiline/whitespace
+  # Build key arguments
   key_args=()
-  while IFS= read -r key; do
-    [ -n "$key" ] && key_args+=("$key")
-  done <<< "$public_keys"
+  if [ -n "$public_keys" ]; then
+    while IFS= read -r key; do
+      [ -n "$key" ] && key_args+=("$key")
+    done <<< "$public_keys"
+    log_message "Processing user '$username' with ${#key_args[@]} key(s)"
+  else
+    log_message "Processing user '$username' with no public keys"
+  fi
 
-  # Call the creation script (passing keys as separate args)
-  /etc/simplevm/homes/create_user_home.sh "$username" "${key_args[@]}"
+  # Call the creation script
+  if [ ${#key_args[@]} -gt 0 ]; then
+    /etc/simplevm/homes/create_user_home.sh "$username" "${key_args[@]}"
+  else
+    /etc/simplevm/homes/create_user_home.sh "$username"
+  fi
   result=$?
 
   if [ $result -ne 0 ]; then
