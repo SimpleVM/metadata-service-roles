@@ -11,7 +11,7 @@ SCRIPT_DATA=("ssh_users")
 
 # Function to log messages with timestamps
 log_message() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
 # Set default user to 'ubuntu' if not provided

@@ -45,6 +45,9 @@ else
     }
 fi
 
+# Prevent users from listing other home directory names
+chmod 751 /home
+
 # Ensure home directory exists with correct ownership
 if [[ ! -d "$HOME_DIR" ]]; then
     log "Creating missing home directory '$HOME_DIR'..."

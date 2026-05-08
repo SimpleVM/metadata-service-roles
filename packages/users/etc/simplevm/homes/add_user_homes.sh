@@ -8,7 +8,7 @@ SCRIPT_VERSION="1.0.0"
 
 # Function to log messages with timestamps
 log_message() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
 /etc/simplevm/utils/rotate_logs.sh 2>/dev/null || true
