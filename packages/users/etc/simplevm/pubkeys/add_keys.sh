@@ -6,12 +6,12 @@ LOG_FILE="/var/log/metadata.log"
 /etc/simplevm/utils/rotate_logs.sh
 
 # Script version and affected keys from the metadata-response
-SCRIPT_VERSION="1.0.0"
-SCRIPT_DATA=("userdata")
+SCRIPT_VERSION="2.0.0"
+SCRIPT_DATA=("ssh_users")
 
 # Function to log messages with timestamps
 log_message() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
 # Set default user to 'ubuntu' if not provided
@@ -38,36 +38,39 @@ if ! echo "$response" | jq . >/dev/null 2>&1; then
 fi
 
 # Extract the VERSION from the JSON response
-metadata_version=$(echo "$response" | jq -r '.userdata.VERSION')
+metadata_version=$(echo "$response" | jq -r '.metadata_version')
+ssh_user_version=$(echo "$response" | jq -r '.ssh_user_version')
 
 # Log the extracted VERSION
-log_message "Metadata version for userdata: $metadata_version"
+log_message "Metadata version: $metadata_version"
+log_message "SSH User version: $ssh_user_version"
 
-# Check if the metadata versions are compatible
-for key in "${SCRIPT_DATA[@]}"; do
-  # Check if the key exists in the JSON response
-  if ! echo "$response" | jq -e ".${key}" >/dev/null 2>&1; then
-    log_message "Needed data $key missing in metadata response. Exiting."
-    exit 0
-  fi
 
-  # Extract the VERSION for the given key from the JSON response
-  metadata_version=$(echo "$response" | jq -r ".${key}.VERSION")
-
-  # Log the extracted VERSION
-  log_message "$key version: $metadata_version"
-
-  # Check if the metadata version is compatible
-  if ! /etc/simplevm/utils/check_version.sh "$key" "$SCRIPT_VERSION" "$metadata_version"; then
+# Check if the metadata version is compatible
+if ! /etc/simplevm/utils/check_version.sh "metadata_version" "$SCRIPT_VERSION" "$metadata_version"; then
     log_message "$key version $metadata_version is not compatible. Exiting."
     exit 1
   fi
-done
 
-# Extract public_keys from the nested JSON structure
-public_keys=$(echo "$response" | jq -r '.userdata.data[] | .public_keys[]?')
+if ! /etc/simplevm/utils/check_version.sh "ssh_user_version" "$SCRIPT_VERSION" "$ssh_user_version"; then
+    log_message "SSH user version $ssh_user_version is incompatible. Exiting."
+    exit 1
+fi
 
-# Check if public_keys is empty
+# Check if ssh_users exists
+if ! jq -e '.ssh_users?' "$METADATA_FILE" >/dev/null 2>&1; then
+  log_message "No ssh_users in metadata. Skipping."
+  exit 0
+fi
+
+# Extract public keys and set unix_name as comment
+public_keys=$(jq -r '
+  .ssh_users[]?
+  | . as $u
+  | (.public_keys // [])[]
+  | split(" ")[:2] | join(" ") + " " + $u.unix_name
+' "$METADATA_FILE" | sort -u)
+
 if [ -z "$public_keys" ]; then
   log_message "No public keys found. metadata_authorized_keys file not updated."
   exit 0

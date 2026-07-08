@@ -38,11 +38,21 @@ systemctl daemon-reload
 
 service ssh restart
 
-# Enable the service and timer
+# Make homes sync script executable
+chmod 755 /etc/simplevm/homes/homes_sync.sh
+
+# Enable the public-keys-sync service and timer
 systemctl enable public-keys-sync.service
 systemctl enable public-keys-sync.timer
 
-# Start the service and timer
+# Start the public-keys-sync timer
 systemctl start public-keys-sync.timer
+
+# Enable the homes-sync service and timer
+systemctl enable homes-sync.service
+systemctl enable homes-sync.timer
+
+# Start the homes-sync timer
+systemctl start homes-sync.timer
 
 exit 0      
