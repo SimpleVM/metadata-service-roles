@@ -51,7 +51,7 @@ source /etc/simplevm/metadata_config.env
 
 OPENSTACK_ID=$(curl -s http://169.254.169.254/openstack/latest/meta_data.json | jq -r '.uuid')
 # Construct the URL with openstack_id query param
-INFO_ENDPOINT_URL="${METADATA_INFO_ENDPOINT}?openstack_id=$(OPENSTACK_ID)"
+INFO_ENDPOINT_URL="${METADATA_INFO_ENDPOINT}?openstack_id=${OPENSTACK_ID}"
 
 # Define the auth header with the token
 AUTH_HEADER="auth_token: ${METADATA_ACCESS_TOKEN}"
