@@ -31,39 +31,48 @@ check_version() {
   local script_version=$2
   local metadata_version=$3
 
+  log_message "Version check: function_key=$function_key script_version=$script_version metadata_version=$metadata_version"
+
   # Fetch the JSON from the specified URL
   local json_data
   json_data=$(curl -s "$COMPATIBILITY_JSON_ENDPOINT")
-
+  log_message "Compatibility JSON received: $json_data"
   # Ensure the JSON data is valid
   if ! echo "$json_data" | jq empty; then
     log_message "Invalid JSON data retrieved from $COMPATIBILITY_JSON_ENDPOINT"
     exit 1
   fi
 
-  # Extract compatible versions using jq, handle missing keys gracefully
+  # Extract compatible versions
   local compatible_versions
-  compatible_versions=$(echo "$json_data" | jq -r --arg function_key "$function_key" --arg script_version "$script_version" '
-    if .[$function_key][$script_version] then .[$function_key][$script_version][] else empty end')
+  compatible_versions=$(echo "$json_data" | jq -r \
+    --arg function_key "$function_key" \
+    --arg script_version "$script_version" \
+    'if .[$function_key][$script_version] then .[$function_key][$script_version][] else empty end')
 
-  # Check if a null result occurred (indicating missing keys or empty results)
+  log_message "Compatible metadata versions from endpoint: $(echo "$compatible_versions" | tr '\n' ' ')"
+
+  # Check if a null result occurred
   if [ -z "$compatible_versions" ]; then
-    return 1  # False, incompatible
+    log_message "No compatible versions found for function_key=$function_key script_version=$script_version"
+    return 1
   fi
 
-  # Check if the metadata version is in the list of compatible versions
+  # Check if metadata version is compatible
   for version in $compatible_versions; do
     if [[ "$version" == "$metadata_version" ]]; then
-      return 0  # True, compatible
+      log_message "Match found: metadata_version $metadata_version is compatible"
+      return 0
     fi
   done
 
-  return 1  # False, incompatible
+  log_message "No match: metadata_version $metadata_version is NOT in compatible list"
+  return 1
 }
 
 # Check and perform the version check
 if check_version "$FUNCTION_KEY" "$SCRIPT_VERSION" "$METADATA_VERSION"; then
-  log_message "Versions are compatible."
+  log_message "Versions are compatible (script=$SCRIPT_VERSION metadata=$METADATA_VERSION)."
 else
-  log_message "Versions are not compatible."
+  log_message "Versions are NOT compatible (script=$SCRIPT_VERSION metadata=$METADATA_VERSION)."
 fi
