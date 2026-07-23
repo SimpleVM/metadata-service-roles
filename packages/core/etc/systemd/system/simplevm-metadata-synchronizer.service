@@ -11,6 +11,7 @@ User=root
 StandardOutput=append:/var/log/metadata.log
 StandardError=append:/var/log/metadata.log
 Restart=on-failure
+RestartSec=30s
 
 [Install]
 WantedBy=multi-user.target
