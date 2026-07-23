@@ -22,18 +22,22 @@ fi
 # ---------------------------------------------------
 # 1. Load VALID users from JSON (deduplicated)
 # ---------------------------------------------------
+if ! jq -e '.home_users | type == "array"' "$METADATA_FILE" >/dev/null; then
+    log_message "No home_users defined in metadata, skipping user cleanup"
+    exit 0
+fi
+
 mapfile -t valid_users < <(
-  jq -r '.home_users[]?.unix_name // empty' "$METADATA_FILE" \
-  | sort -u
+    jq -r '.home_users[].unix_name // empty' "$METADATA_FILE" |
+    sort -u
 )
 
 if [ "${#valid_users[@]}" -eq 0 ]; then
-  log_message "WARNING: no valid home_users found in metadata, disabling all non-system /home users"
-  valid_users=("__none__")
+    log_message "WARNING: no valid home_users found in metadata, disabling all non-system /home users"
+    valid_users=("__none__")
 fi
 
 log_message "Loaded ${#valid_users[@]} valid home_users"
-
 # ---------------------------------------------------
 # 2. Build lookup (fast exact match)
 # ---------------------------------------------------
