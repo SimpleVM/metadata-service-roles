@@ -6,6 +6,6 @@ systemctl enable simplevm-metadata-auto-update.service
 systemctl enable simplevm-metadata-auto-update.timer
 
 # Start the service and timer
-systemctl start simplevm-metadata-synchronizer.timer
+systemctl start simplevm-metadata-auto-update.timer
 
 exit 0
