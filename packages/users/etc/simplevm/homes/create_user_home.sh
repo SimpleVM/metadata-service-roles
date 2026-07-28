@@ -31,7 +31,7 @@ if id "$USERNAME" &>/dev/null; then
     USER_EXISTS=true
     log "User '$USERNAME' already exists."
     log "Reactivating user '$USERNAME' (if disabled)..."
-
+    CURRENT_SHELL=$(getent passwd "$USERNAME" | cut -d: -f7)
     # unlock account
     usermod -U "$USERNAME" 2>/dev/null || true
     
