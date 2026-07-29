@@ -31,12 +31,20 @@ if id "$USERNAME" &>/dev/null; then
     USER_EXISTS=true
     log "User '$USERNAME' already exists."
     log "Reactivating user '$USERNAME' (if disabled)..."
-
+    CURRENT_SHELL=$(getent passwd "$USERNAME" | cut -d: -f7)
     # unlock account
     usermod -U "$USERNAME" 2>/dev/null || true
+    
+    # restore shell only if it was disabled
+    if [[ "$CURRENT_SHELL" == "/usr/sbin/nologin" || "$CURRENT_SHELL" == "/bin/false" ]]; then
+        log "Restoring shell for '$USERNAME'..."
+        usermod -s /bin/bash "$USERNAME"
+    else
+        log "Keeping existing shell '$CURRENT_SHELL' for '$USERNAME'."
+    fi
 
-    # restore shell
-    usermod -s /bin/bash "$USERNAME"
+
+    
 else
     log "Creating user '$USERNAME'..."
     useradd -m -s /bin/bash -U "$USERNAME" || {
