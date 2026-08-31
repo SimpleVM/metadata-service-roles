@@ -43,7 +43,7 @@ reset_interval() {
 }
 
 /etc/simplevm/utils/rotate_logs.sh
-#/etc/simplevm/utils/update_compatibilities.sh
+/etc/simplevm/utils/update_compatibilities.sh
 
 
 
