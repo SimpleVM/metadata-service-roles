@@ -17,12 +17,25 @@ log_message "This is my interval: ${current_interval}"
 
 
 set_new_interval() {
-    # Update the timer file
-    echo "Running: sed -i 's/^OnUnitActiveSec=.*/OnUnitActiveSec=$1/' $TIMER_PATH"
-    sudo sed -i "s/^OnUnitActiveSec=.*/OnUnitActiveSec=$1/" $TIMER_PATH
-    # Reload systemd to apply changes
+    local new_interval="$1"
+    local current_interval
+
+    current_interval=$(grep '^OnUnitActiveSec=' "$TIMER_PATH" | cut -d= -f2-)
+
+    if [[ "$current_interval" == "$new_interval" ]]; then
+        echo "Timer interval already set to $new_interval"
+        return
+    fi
+
+    echo "Updating timer interval: ${current_interval:-<unset>} -> $new_interval"
+
+    if grep -q '^OnUnitActiveSec=' "$TIMER_PATH"; then
+        sudo sed -i "s/^OnUnitActiveSec=.*/OnUnitActiveSec=$new_interval/" "$TIMER_PATH"
+    else
+        echo "OnUnitActiveSec=$new_interval" | sudo tee -a "$TIMER_PATH" > /dev/null
+    fi
+
     sudo systemctl daemon-reload
-    # Restart the timer with the new interval
     sudo systemctl restart simplevm-metadata-synchronizer.timer
 }
 
@@ -32,6 +45,7 @@ extend_interval() {
     # Ensure we do not exceed the max interval
     if (( new_interval > MAX_INTERVAL )); then
         echo "Timer already got extended to max"
+        return
     fi
     log_message "Extending timer interval to ${new_interval} minutes"
     set_new_interval "${new_interval}min"
