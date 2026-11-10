@@ -70,39 +70,62 @@ INFO_ENDPOINT_URL="${METADATA_INFO_ENDPOINT}?openstack_id=${OPENSTACK_ID}"
 # Define the auth header with the token
 AUTH_HEADER="auth_token: ${METADATA_ACCESS_TOKEN}"
 
-# Get real metadata endpoint from config if available
-REAL_METADATA_ENDPOINT=$(grep '^REAL_METADATA_ENDPOINT=' "/etc/simplevm/metadata_config.env" | cut -d '=' -f 2-)
+# Get real metadata endpoint from config (with TTL so a changed endpoint is picked up)
+CONFIG_FILE="/etc/simplevm/metadata_config.env"
+ENDPOINT_TTL_SECONDS=43200  # 12 hours
 
+REAL_METADATA_ENDPOINT=$(grep '^REAL_METADATA_ENDPOINT=' "${CONFIG_FILE}" | head -n1 | cut -d '=' -f 2-)
+REAL_METADATA_ENDPOINT_TTL=$(grep '^REAL_METADATA_ENDPOINT_TTL=' "${CONFIG_FILE}" | head -n1 | cut -d '=' -f 2-)
 
+now=$(date +%s)
+endpoint_age=$(( now - ${REAL_METADATA_ENDPOINT_TTL:-0} ))
 
-if [ -z "${REAL_METADATA_ENDPOINT}" ]; then
-  # Fetch the JSON response from the info endpoint to get real metadata endpoint
-  info_response=$(curl -s -X GET "${INFO_ENDPOINT_URL}" -H "${AUTH_HEADER}")
+# Refresh REAL_METADATA_ENDPOINT from the info endpoint and update the cache.
+# Returns 0 on success (REAL_METADATA_ENDPOINT is then set), 1 if the info
+# endpoint is unreachable or returns an invalid response.
+refresh_metadata_endpoint() {
+  local info_response now_ts
+  info_response=$(curl -s --connect-timeout 5 --max-time 20 -X GET "${INFO_ENDPOINT_URL}" -H "${AUTH_HEADER}")
 
-  if [ $? -ne 0 ]; then
-    log_message "Error: Failed to fetch metadata endpoint"
-    reset_interval
-    exit 1  
+  if [ $? -ne 0 ] || ! jq -e '.metadata_endpoint' <<< "${info_response}" &> /dev/null; then
+    return 1
   fi
 
-  # Validate the JSON response
-  if ! jq -e '.metadata_endpoint' <<< "${info_response}" &> /dev/null; then
-    log_message "Error: Invalid JSON response from metadata endpoint"
-    reset_interval
-    exit 1
-  fi
-
-  # Extract the actual metadata endpoint from the response
   REAL_METADATA_ENDPOINT=$(jq -r '.metadata_endpoint' <<< "${info_response}")
+  now_ts=$(date +%s)
 
-  # Save real metadata endpoint to config
-  echo "REAL_METADATA_ENDPOINT=${REAL_METADATA_ENDPOINT}" >> "/etc/simplevm/metadata_config.env"
+  # Update the cached endpoint + TTL (dedup: replace existing lines instead of appending)
+  if grep -q '^REAL_METADATA_ENDPOINT=' "${CONFIG_FILE}"; then
+    sed -i "s|^REAL_METADATA_ENDPOINT=.*|REAL_METADATA_ENDPOINT=${REAL_METADATA_ENDPOINT}|" "${CONFIG_FILE}"
+  else
+    echo "REAL_METADATA_ENDPOINT=${REAL_METADATA_ENDPOINT}" >> "${CONFIG_FILE}"
+  fi
+  if grep -q '^REAL_METADATA_ENDPOINT_TTL=' "${CONFIG_FILE}"; then
+    sed -i "s|^REAL_METADATA_ENDPOINT_TTL=.*|REAL_METADATA_ENDPOINT_TTL=${now_ts}|" "${CONFIG_FILE}"
+  else
+    echo "REAL_METADATA_ENDPOINT_TTL=${now_ts}" >> "${CONFIG_FILE}"
+  fi
+  return 0
+}
+
+# Cache is missing or stale -> refresh from the info endpoint
+if [ -z "${REAL_METADATA_ENDPOINT}" ] || (( endpoint_age > ENDPOINT_TTL_SECONDS )); then
+  if ! refresh_metadata_endpoint; then
+    if [ -n "${REAL_METADATA_ENDPOINT}" ]; then
+      # Stale cache: keep using it rather than failing the whole sync
+      log_message "WARN: Failed to refresh metadata endpoint, using cached endpoint (age ${endpoint_age}s)"
+    else
+      log_message "Error: No metadata endpoint available (no cache, info endpoint unreachable)"
+      reset_interval
+      exit 1
+    fi
+  fi
 fi
 
 # Fetch the actual metadata from the extracted endpoint
 
 LOCAL_IP=$(hostname -I | awk '{print $1}')
-full_response=$(curl -s -o - -w "%{http_code}" -X GET "${REAL_METADATA_ENDPOINT}/metadata/${LOCAL_IP}" -H "${AUTH_HEADER}")
+full_response=$(curl -s --connect-timeout 5 --max-time 20 -o - -w "%{http_code}" -X GET "${REAL_METADATA_ENDPOINT}/metadata/${LOCAL_IP}" -H "${AUTH_HEADER}")
 
 response_status="${full_response: -3}"
 metadata_response="${full_response%???}"
@@ -116,7 +139,31 @@ fi
 
 
 # Check the status code and act accordingly
-if [ "$response_status" -eq 200 ]; then
+if [ "$response_status" = "000" ]; then
+  # No HTTP response at all: endpoint unreachable (DNS/connection refused/timeout).
+  # The pinned endpoint is likely gone -> drop the cache and immediately try
+  # to fetch a fresh endpoint from the info endpoint.
+  echo "Error: Metadata endpoint unreachable (no HTTP response). Invalidating cached endpoint..."
+  sed -i 's|^REAL_METADATA_ENDPOINT=.*|REAL_METADATA_ENDPOINT=|' "${CONFIG_FILE}"
+  sed -i 's|^REAL_METADATA_ENDPOINT_TTL=.*|REAL_METADATA_ENDPOINT_TTL=|' "${CONFIG_FILE}"
+  REAL_METADATA_ENDPOINT=""
+  log_message "Invalidated cached metadata endpoint: endpoint unreachable"
+
+  if refresh_metadata_endpoint; then
+    log_message "Recovered: fetched fresh metadata endpoint from info endpoint"
+  else
+    log_message "Failed to fetch fresh metadata endpoint, will retry on next run"
+    extend_interval
+    exit 1
+  fi
+
+  # Retry the metadata fetch against the recovered endpoint
+  full_response=$(curl -s --connect-timeout 5 --max-time 20 -o - -w "%{http_code}" -X GET "${REAL_METADATA_ENDPOINT}/metadata/${LOCAL_IP}" -H "${AUTH_HEADER}")
+  response_status="${full_response: -3}"
+  metadata_response="${full_response%???}"
+  # Fall through to the status handling below
+
+elif [ "$response_status" -eq 200 ]; then
   # Successful response; proceed to any further processing if needed
   # Write the metadata to a temporary file
   TMP_FILE="${METADATA_OUTPUT_FILE}.tmp"
@@ -146,9 +193,28 @@ elif [ "$response_status" -eq 403 ]; then
     
 
 elif [ "$response_status" -eq 404 ]; then
-  echo "Error: Key not found in the response. Resetting interval..."
-  reset_interval
-  exit 1
+  # A 404 from the pinned endpoint usually means it was renamed/removed.
+  # Drop the cached endpoint and immediately try to fetch a fresh one from
+  # the info endpoint.
+  echo "Error: 404 from metadata endpoint, invalidating cached endpoint. Resetting interval..."
+  sed -i 's|^REAL_METADATA_ENDPOINT=.*|REAL_METADATA_ENDPOINT=|' "${CONFIG_FILE}"
+  sed -i 's|^REAL_METADATA_ENDPOINT_TTL=.*|REAL_METADATA_ENDPOINT_TTL=|' "${CONFIG_FILE}"
+  REAL_METADATA_ENDPOINT=""
+  log_message "Invalidated cached metadata endpoint after 404"
+
+  if refresh_metadata_endpoint; then
+    log_message "Recovered: fetched fresh metadata endpoint from info endpoint"
+  else
+    log_message "Failed to fetch fresh metadata endpoint, will retry on next run"
+    reset_interval
+    exit 1
+  fi
+
+  # Retry the metadata fetch against the recovered endpoint
+  full_response=$(curl -s --connect-timeout 5 --max-time 20 -o - -w "%{http_code}" -X GET "${REAL_METADATA_ENDPOINT}/metadata/${LOCAL_IP}" -H "${AUTH_HEADER}")
+  response_status="${full_response: -3}"
+  metadata_response="${full_response%???}"
+  # Fall through to the status handling below
 
 elif [ "$response_status" -eq 429 ]; then
   echo "Error: Too many requests received from this client. Extending interval..."
